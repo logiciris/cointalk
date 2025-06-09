@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinTalk - 홈페이지</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-container">
+                <a href="#" class="logo">
+                    <span class="logo-icon">₿</span>
+                    <span>CoinTalk</span>
+                </a>
+                
+                <div class="search-bar">
+                    <input type="text" placeholder="코인, 사용자 또는 주제 검색..." class="form-control">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+                
+                <div class="nav-actions">
+                    <a href="#" class="nav-icon">
+                        <i class="bi bi-bell"></i>
+                    </a>
+                    <a href="#" class="nav-icon">
+                        <i class="bi bi-chat"></i>
+                    </a>
+                    <a href="#">
+                        <img src="https://via.placeholder.com/40" alt="Profile" class="avatar">
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- 사이드바 -->
+            <div class="sidebar">
+                <nav>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active">
+                                <i class="bi bi-house nav-icon-menu"></i> 홈
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-compass nav-icon-menu"></i> 탐색
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-currency-bitcoin nav-icon-menu"></i> 코인
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-bookmark nav-icon-menu"></i> 저장됨
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="bi bi-person nav-icon-menu"></i> 프로필
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="coin-ticker">
+                    <div class="sidebar-title">실시간 코인 시세</div>
+                    <div class="coin-item">
+                        <div class="coin-info">
+                            <img src="https://via.placeholder.com/24/FFCC33/000000?text=BTC" alt="Bitcoin" class="coin-logo">
+                            <span class="coin-name">BTC</span>
+                        </div>
+                        <div class="coin-price-info">
+                            <div class="coin-price">$58,432.21</div>
+                            <div class="price-change price-up">+2.4%</div>
+                        </div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="coin-info">
+                            <img src="https://via.placeholder.com/24/627EEA/000000?text=ETH" alt="Ethereum" class="coin-logo">
+                            <span class="coin-name">ETH</span>
+                        </div>
+                        <div class="coin-price-info">
+                            <div class="coin-price">$3,521.08</div>
+                            <div class="price-change price-down">-1.2%</div>
+                        </div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="coin-info">
+                            <img src="https://via.placeholder.com/24/0033AD/FFFFFF?text=ADA" alt="Cardano" class="coin-logo">
+                            <span class="coin-name">ADA</span>
+                        </div>
+                        <div class="coin-price-info">
+                            <div class="coin-price">$2.85</div>
+                            <div class="price-change price-up">+5.7%</div>
+                        </div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="coin-info">
+                            <img src="https://via.placeholder.com/24/14F195/000000?text=SOL" alt="Solana" class="coin-logo">
+                            <span class="coin-name">SOL</span>
+                        </div>
+                        <div class="coin-price-info">
+                            <div class="coin-price">$158.64</div>
+                            <div class="price-change price-up">+8.3%</div>
+                        </div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="coin-info">
+                            <img src="https://via.placeholder.com/24/23292F/FFFFFF?text=XRP" alt="Ripple" class="coin-logo">
+                            <span class="coin-name">XRP</span>
+                        </div>
+                        <div class="coin-price-info">
+                            <div class="coin-price">$1.12</div>
+                            <div class="price-change price-down">-0.8%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 콘텐츠 영역 -->
+            <div class="content">
+                <div class="home-page">
+                    <!-- 환영 배너 -->
+                    <div class="welcome-banner">
+                        <h1>CoinTalk에 오신 것을 환영합니다</h1>
+                        <p>암호화폐 커뮤니티와 함께 최신 트렌드, 분석, 뉴스를 공유하세요.</p>
+                        <div class="banner-actions">
+                            <button class="btn btn-light me-3">지금 시작하기</button>
+                            <button class="btn btn-outline-light">더 알아보기</button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- 인기 게시물 섹션 -->
+                            <div class="posts-section">
+                                <div class="section-header">
+                                    <div class="section-title">인기 게시물</div>
+                                    <a href="#" class="section-link">모두 보기</a>
+                                </div>
+                                
+                                <!-- 게시물 카드 1 -->
+                                <div class="post-card">
+                                    <div class="post-header">
+                                        <div class="post-author">
+                                            <img src="https://via.placeholder.com/32" alt="bitcoinenthusiast" class="author-avatar">
+                                            <span class="author-name">bitcoinenthusiast</span>
+                                        </div>
+                                        <div class="post-date">2025-05-15</div>
+                                    </div>
+                                    <a href="#">
+                                        <h3 class="post-title">비트코인 상승세, 올해 말 새로운 고점 찍을까?</h3>
+                                    </a>
+                                    <div class="post-excerpt">최근 비트코인 가격이 지속적인 상승세를 보이고 있습니다. 이번 상승세는 기관 투자자들의 관심 증가와 규제 환경 개선으로 인한 것으로 보입니다. 연말까지 새로운 역사적 고점을 기록할 수 있을까요?</div>
+                                    <div class="post-tags">
+                                        <span class="post-tag">#시세분석</span>
+                                        <span class="post-tag">#비트코인</span>
+                                        <span class="post-tag">#예측</span>
+                                        <span class="post-tag coin">$BTC</span>
+                                    </div>
+                                    <div class="post-stats">
+                                        <div class="post-stat">
+                                            <i class="bi bi-heart stat-icon"></i> 42
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-chat stat-icon"></i> 15
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-eye stat-icon"></i> 230
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 게시물 카드 2 -->
+                                <div class="post-card">
+                                    <div class="post-header">
+                                        <div class="post-author">
+                                            <img src="https://via.placeholder.com/32" alt="cryptotrader" class="author-avatar">
+                                            <span class="author-name">cryptotrader</span>
+                                        </div>
+                                        <div class="post-date">2025-05-14</div>
+                                    </div>
+                                    <a href="#">
+                                        <h3 class="post-title">이더리움 2.0 업그레이드가 가져올 변화</h3>
+                                    </a>
+                                    <div class="post-excerpt">이더리움 2.0 업그레이드가 드디어 완료되었습니다. 지분 증명 방식으로의 전환은 네트워크의 효율성과 확장성을 크게 개선할 것으로 기대됩니다. 이로 인해 DeFi 생태계와 NFT 시장에는 어떤 변화가 생길까요?</div>
+                                    <div class="post-tags">
+                                        <span class="post-tag">#이더리움</span>
+                                        <span class="post-tag">#업그레이드</span>
+                                        <span class="post-tag">#PoS</span>
+                                        <span class="post-tag coin">$ETH</span>
+                                    </div>
+                                    <div class="post-stats">
+                                        <div class="post-stat">
+                                            <i class="bi bi-heart stat-icon"></i> 37
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-chat stat-icon"></i> 23
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-eye stat-icon"></i> 185
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 게시물 카드 3 -->
+                                <div class="post-card">
+                                    <div class="post-header">
+                                        <div class="post-author">
+                                            <img src="https://via.placeholder.com/32" alt="defimaster" class="author-avatar">
+                                            <span class="author-name">defimaster</span>
+                                        </div>
+                                        <div class="post-date">2025-05-13</div>
+                                    </div>
+                                    <a href="#">
+                                        <h3 class="post-title">탈중앙화 금융(DeFi)의 미래와 도전 과제</h3>
+                                    </a>
+                                    <div class="post-excerpt">탈중앙화 금융(DeFi)은 전통적인 금융 시스템을 크게 변화시킬 잠재력을 가지고 있습니다. 그러나 확장성 문제, 보안 취약점, 규제 불확실성과 같은 여러 도전 과제가 있습니다. DeFi가 이러한 문제를 어떻게 해결할 수 있을까요?</div>
+                                    <div class="post-tags">
+                                        <span class="post-tag">#DeFi</span>
+                                        <span class="post-tag">#금융</span>
+                                        <span class="post-tag">#블록체인</span>
+                                        <span class="post-tag coin">$ETH</span>
+                                        <span class="post-tag coin">$AAVE</span>
+                                        <span class="post-tag coin">$UNI</span>
+                                    </div>
+                                    <div class="post-stats">
+                                        <div class="post-stat">
+                                            <i class="bi bi-heart stat-icon"></i> 29
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-chat stat-icon"></i> 18
+                                        </div>
+                                        <div class="post-stat">
+                                            <i class="bi bi-eye stat-icon"></i> 142
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <!-- 트렌딩 코인 섹션 -->
+                            <div class="trending-section">
+                                <div class="section-header">
+                                    <div class="section-title">인기 급상승 코인</div>
+                                    <a href="#" class="section-link">전체보기</a>
+                                </div>
+                                <div class="trending-coins">
+                                    <a href="#">
+                                        <div class="trend-card">
+                                            <div class="trend-coin">
+                                                <img src="https://via.placeholder.com/32/FFCC33/000000?text=BTC" alt="Bitcoin" class="trend-logo">
+                                                <div class="trend-details">
+                                                    <div class="trend-name">Bitcoin</div>
+                                                    <div class="trend-symbol">BTC</div>
+                                                </div>
+                                            </div>
+                                            <div class="trend-data">
+                                                <div class="trend-price">$58,432.21</div>
+                                                <div class="trend-change price-up">+2.4%</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <a href="#">
+                                        <div class="trend-card">
+                                            <div class="trend-coin">
+                                                <img src="https://via.placeholder.com/32/627EEA/000000?text=ETH" alt="Ethereum" class="trend-logo">
+                                                <div class="trend-details">
+                                                    <div class="trend-name">Ethereum</div>
+                                                    <div class="trend-symbol">ETH</div>
+                                                </div>
+                                            </div>
+                                            <div class="trend-data">
+                                                <div class="trend-price">$3,521.08</div>
+                                                <div class="trend-change price-down">-1.2%</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    <a href="#">
+                                        <div class="trend-card">
+                                            <div class="trend-coin">
+                                                <img src="https://via.placeholder.com/32/14F195/000000?text=SOL" alt="Solana" class="trend-logo">
+                                                <div class="trend-details">
+                                                    <div class="trend-name">Solana</div>
+                                                    <div class="trend-symbol">SOL</div>
+                                                </div>
+                                            </div>
+                                            <div class="trend-data">
+                                                <div class="trend-price">$158.64</div>
+                                                <div class="trend-change price-up">+8.3%</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- 새 게시물 작성 버튼 -->
+                            <div class="d-grid gap-2 mt-4">
+                                <button class="btn btn-primary btn-lg">
+                                    <i class="bi bi-plus-circle me-2"></i>새 게시물 작성
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <p>© 2025 CoinTalk. 모든 권리 보유.</p>
+                        <p>
+                            <small>
+                                암호화폐 커뮤니티를 위한 소셜 플랫폼 | 취약점 진단 학습 목적
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

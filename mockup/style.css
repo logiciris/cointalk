@@ -1,0 +1,472 @@
+/* 전체 앱 스타일 */
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Segoe UI', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+/* 헤더 스타일 */
+.header {
+  background: linear-gradient(to right, #f7931a, #f2a54a);
+  color: white;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.logo-icon {
+  margin-right: 10px;
+}
+
+.search-bar {
+  flex-grow: 1;
+  margin: 0 1rem;
+  max-width: 500px;
+  position: relative;
+}
+
+.search-bar input {
+  padding-right: 30px;
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+}
+
+.nav-icon {
+  margin-left: 1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: white;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+
+/* 사이드바 스타일 */
+.sidebar {
+  width: 250px;
+  background-color: white;
+  padding: 1rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.nav-item {
+  margin-bottom: 0.5rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  color: #495057;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #f0f0f0;
+}
+
+.nav-link.active {
+  background-color: #e9ecef;
+  color: #f7931a;
+  font-weight: bold;
+}
+
+.nav-icon-menu {
+  margin-right: 10px;
+}
+
+.coin-ticker {
+  margin-top: 1.5rem;
+  border-top: 1px solid #dee2e6;
+  padding-top: 1rem;
+}
+
+.coin-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.coin-info {
+  display: flex;
+  align-items: center;
+}
+
+.coin-logo {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+
+.coin-name {
+  font-weight: 500;
+}
+
+.coin-price-info {
+  text-align: right;
+}
+
+.coin-price {
+  font-weight: 500;
+}
+
+.price-change {
+  font-size: 0.8rem;
+}
+
+.price-up {
+  color: #28a745;
+}
+
+.price-down {
+  color: #dc3545;
+}
+
+/* 홈페이지 스타일 */
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-banner {
+  background: linear-gradient(45deg, #627eea, #3498db);
+  color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.welcome-banner h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.banner-actions {
+  margin-top: 1rem;
+}
+
+.posts-section {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #343a40;
+}
+
+.section-link {
+  color: #f7931a;
+  text-decoration: none;
+}
+
+.post-card {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.post-author {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.author-name {
+  font-weight: 500;
+}
+
+.post-date {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.post-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #212529;
+}
+
+.post-excerpt {
+  color: #495057;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.post-tag {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.post-tag.coin {
+  background-color: #fff1cd;
+  color: #f7931a;
+}
+
+.post-stats {
+  display: flex;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.post-stat {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.stat-icon {
+  margin-right: 0.3rem;
+}
+
+.trending-section {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.trending-coins {
+  margin-top: 1rem;
+}
+
+.trending-coins a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.trend-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.trend-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.trend-coin {
+  display: flex;
+  align-items: center;
+}
+
+.trend-logo {
+  width: 32px;
+  height: 32px;
+  margin-right: 0.75rem;
+  border-radius: 50%;
+}
+
+.trend-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.trend-name {
+  font-weight: 500;
+}
+
+.trend-symbol {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.trend-data {
+  text-align: right;
+}
+
+.trend-price {
+  font-weight: 500;
+}
+
+.trend-change {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.footer {
+  background-color: #343a40;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 992px) {
+  .main-content {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    box-shadow: none;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .welcome-banner h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+  }
+  
+  .search-bar {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    margin: 0.5rem 0;
+  }
+  
+  .post-card {
+    padding: 0.75rem;
+  }
+  
+  .post-title {
+    font-size: 1rem;
+  }
+}
+
+/* 버튼 스타일 */
+.btn-primary {
+  background-color: #f7931a;
+  border-color: #f7931a;
+}
+
+.btn-primary:hover {
+  background-color: #e67e17;
+  border-color: #e67e17;
+}
+
+.btn-outline-light:hover {
+  color: #f7931a;
+}

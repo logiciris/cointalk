@@ -1,0 +1,118 @@
+version: '3'
+
+services:
+  # 프론트엔드 서비스
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - cointalk-network
+
+  # 백엔드 서비스
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_USER=cointalk_user
+      - DB_PASSWORD=password123
+      - DB_NAME=cointalk
+      - DB_PORT=3306
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=your_jwt_secret
+    networks:
+      - cointalk-network
+
+  # MySQL 서비스
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/sample_data_1.sql:/docker-entrypoint-initdb.d/02-sample_data_1.sql
+      - ./database/sample_data_2.sql:/docker-entrypoint-initdb.d/03-sample_data_2.sql
+      - ./database/sample_data_3_a.sql:/docker-entrypoint-initdb.d/04-sample_data_3_a.sql
+      - ./database/sample_data_3_b.sql:/docker-entrypoint-initdb.d/05-sample_data_3_b.sql
+      - ./database/sample_data_3_c.sql:/docker-entrypoint-initdb.d/06-sample_data_3_c.sql
+      - ./database/sample_data_3_d.sql:/docker-entrypoint-initdb.d/07-sample_data_3_d.sql
+      - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=cointalk
+      - MYSQL_USER=cointalk_user
+      - MYSQL_PASSWORD=password123
+    networks:
+      - cointalk-network
+
+  # Redis 서비스
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - cointalk-network
+
+  # 관리자 API 서비스 (내부 전용)
+  admin-api:
+    build: ./admin-api
+    # 포트를 외부에 노출하지 않음 - 내부 네트워크에서만 접근 가능
+    expose:
+      - "3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_USER=cointalk_user
+      - DB_PASSWORD=password123
+      - DB_NAME=cointalk
+    networks:
+      - cointalk-network
+    depends_on:
+      - mysql
+
+  # 모니터링 서비스 (내부 전용)
+  monitoring:
+    build: ./monitoring
+    # 포트를 외부에 노출하지 않음
+    expose:
+      - "3002"
+    environment:
+      - NODE_ENV=development
+    networks:
+      - cointalk-network
+
+  # Nginx 서비스
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - cointalk-network
+
+networks:
+  cointalk-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

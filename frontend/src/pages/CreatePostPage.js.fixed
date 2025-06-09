@@ -1,0 +1,368 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Container, Card, Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import { useSelector } from 'react-redux';
+import axios from 'axios';
+
+const CreatePostPage = () => {
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    tags: '',
+    coins: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [allowHtml, setAllowHtml] = useState(true); // XSS 취약점: 항상 HTML 허용
+  const [token, setToken] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [postId, setPostId] = useState(null);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, user } = useSelector(state => state.auth);
+  
+  // URL 파라미터에서 편집 모드인지 확인
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const editMode = params.get('edit') === 'true';
+    const id = params.get('id');
+    
+    if (editMode && id) {
+      setIsEditMode(true);
+      setPostId(id);
+      // 게시물 데이터 불러오기
+      fetchPost(id);
+    }
+  }, [location.search]);
+  
+  // 컴포넌트 로드 시 현재 토큰 가져오기
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      setToken(savedToken);
+    } else {
+      // 토큰이 없으면 로그인 시도
+      loginWithTestAccount();
+    }
+  }, []);
+  
+  // 게시물 데이터 불러오기
+  const fetchPost = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/posts/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.data) {
+        // 폼 데이터 업데이트
+        setFormData({
+          title: response.data.title || '',
+          content: response.data.content || '',
+          tags: response.data.tags ? response.data.tags.map(tag => tag.name || tag).join(', ') : '',
+          coins: response.data.coins ? response.data.coins.map(coin => coin.symbol || coin).join(', ') : ''
+        });
+      }
+    } catch (error) {
+      console.error('게시물 불러오기 오류:', error);
+      setError('게시물을 불러올 수 없습니다.');
+    }
+  };
+  
+  // 테스트 계정으로 로그인
+  const loginWithTestAccount = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email: 'test@example.com',
+        password: 'testpass123'
+      });
+      
+      if (response.data.success) {
+        const newToken = response.data.token;
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+        console.log('로그인 성공:', response.data);
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error);
+      setError('로그인에 실패하여 게시물 작성이 불가능합니다.');
+    }
+  }
+
+  // 로그인하지 않은 사용자는 접근 불가
+  if (!isAuthenticated) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="warning">
+          게시물을 작성하려면 로그인해야 합니다.
+          <br />
+          <Button variant="link" onClick={() => navigate('/login')}>
+            로그인하기
+          </Button>
+        </Alert>
+      </Container>
+    );
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { title, content, tags, coins } = formData;
+
+      // 기본 유효성 검사
+      if (!title.trim() || !content.trim()) {
+        setError('제목과 내용을 입력해주세요.');
+        setLoading(false);
+        return;
+      }
+
+      // 의도적인 취약점: HTML 허용 시 XSS 공격 가능
+      const processedTitle = allowHtml ? title : title; // HTML 이스케이프 안함
+      const processedContent = allowHtml ? content : content; // HTML 이스케이프 안함
+
+      // 태그와 코인 처리 (콤마로 구분된 문자열을 배열로 변환)
+      const tagArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+      const coinArray = coins ? coins.split(',').map(coin => coin.trim()).filter(coin => coin) : [];
+
+      const postData = {
+        title: processedTitle,
+        content: processedContent,
+        tags: tagArray,
+        coins: coinArray,
+        allowHtml: allowHtml // 서버에 HTML 허용 여부 전달
+      };
+
+      // 토큰이 없으면 오류
+      if (!token) {
+        setError('유효한 인증 토큰이 없습니다. 로그인해주세요.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('사용할 토큰:', token);
+      
+      let response;
+      
+      if (isEditMode && postId) {
+        // 게시물 수정 요청
+        response = await axios.put(`http://localhost:5000/api/posts/${postId}`, postData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } else {
+        // 게시물 생성 요청
+        response = await axios.post('http://localhost:5000/api/posts', postData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+
+      console.log('게시물 작성 응답:', response.data);
+
+      if (response.data.success) {
+        setSuccess(isEditMode ? '게시물이 성공적으로 수정되었습니다!' : '게시물이 성공적으로 작성되었습니다!');
+        
+        // 3초 후 게시물 목록으로 이동
+        setTimeout(() => {
+          navigate('/posts');
+        }, 3000);
+      } else {
+        setError(response.data.message || '게시물 작성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('게시물 작성 오류:', error);
+      if (error.response) {
+        // 서버 응답이 있는 경우
+        setError(error.response.data?.message || '서버 오류: ' + error.response.status);
+        console.log('서버 응답 데이터:', error.response.data);
+      } else if (error.request) {
+        // 요청이 전송됐지만 응답이 없는 경우
+        setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+      } else {
+        // 요청 설정 중 오류가 발생한 경우
+        setError('요청 중 오류 발생: ' + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Container className="mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>{isEditMode ? '게시물 수정' : '게시물 작성'}</h1>
+        <Button variant="outline-secondary" onClick={() => navigate('/posts')}>
+          목록으로 돌아가기
+        </Button>
+      </div>
+
+      <Card>
+        <Card.Body>
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
+          
+          {success && (
+            <Alert variant="success">
+              {success}
+              <br />
+              <small>잠시 후 게시물 목록으로 이동합니다...</small>
+            </Alert>
+          )}
+
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>제목</Form.Label>
+              <Form.Control
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="게시물 제목을 입력하세요"
+                required
+                disabled={loading}
+                maxLength={200}
+              />
+              <Form.Text className="text-muted">
+                최대 200자까지 입력 가능합니다.
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>내용</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={10}
+                name="content"
+                value={formData.content}
+                onChange={handleInputChange}
+                placeholder="게시물 내용을 입력하세요"
+                required
+                disabled={loading}
+              />
+              <Form.Text className="text-muted"></Form.Text>
+            </Form.Group>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>태그</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleInputChange}
+                    placeholder="태그1, 태그2, 태그3"
+                    disabled={loading}
+                  />
+                  <Form.Text className="text-muted">
+                    콤마(,)로 구분하여 여러 태그를 입력하세요.
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>관련 코인</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="coins"
+                    value={formData.coins}
+                    onChange={handleInputChange}
+                    placeholder="BTC, ETH, ADA"
+                    disabled={loading}
+                  />
+                  <Form.Text className="text-muted">
+                    콤마(,)로 구분하여 관련 코인 심볼을 입력하세요.
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* 미리보기 영역 */}
+            {(formData.title || formData.content) && (
+              <Card className="mb-3" style={{ backgroundColor: '#f8f9fa' }}>
+                <Card.Header>
+                  <h6 className="mb-0">미리보기</h6>
+                </Card.Header>
+                <Card.Body>
+                  {formData.title && (
+                    <h5 className="card-title">
+                      {allowHtml ? (
+                        // 의도적인 XSS 취약점: HTML 렌더링
+                        <span dangerouslySetInnerHTML={{ __html: formData.title }} />
+                      ) : (
+                        formData.title
+                      )}
+                    </h5>
+                  )}
+                  {formData.content && (
+                    <div>
+                      {allowHtml ? (
+                        // 의도적인 XSS 취약점: HTML 렌더링
+                        <div dangerouslySetInnerHTML={{ __html: formData.content }} />
+                      ) : (
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{formData.content}</div>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-muted mt-2">
+                    <small>작성자: {user?.username}</small>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            <div className="d-flex justify-content-end gap-2">
+              <Button 
+                variant="outline-secondary" 
+                type="button"
+                onClick={() => navigate('/posts')}
+                disabled={loading}
+              >
+                취소
+              </Button>
+              <Button 
+                variant="primary" 
+                type="submit"
+                disabled={loading || !formData.title.trim() || !formData.content.trim()}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    {isEditMode ? '수정 중...' : '작성 중...'}
+                  </>
+                ) : (
+                  isEditMode ? '게시물 수정' : '게시물 작성'
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+    </Container>
+  );
+};
+
+export default CreatePostPage;

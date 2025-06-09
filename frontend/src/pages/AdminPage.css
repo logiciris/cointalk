@@ -1,0 +1,492 @@
+/* AdminPage.css - 관리자 페이지 전용 스타일 */
+
+.admin-page {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 70px);
+  padding: 20px 0;
+}
+
+.admin-header {
+  background: linear-gradient(135deg, #f7931a 0%, #ffa726 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.admin-header p {
+  margin: 10px 0 0 0;
+  opacity: 0.9;
+}
+
+.admin-nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+  background: white;
+  border-radius: 10px 10px 0 0;
+  padding: 0 20px;
+}
+
+.admin-nav-tabs .nav-link {
+  color: #6c757d;
+  font-weight: 500;
+  border: none;
+  padding: 15px 20px;
+  transition: all 0.3s ease;
+}
+
+.admin-nav-tabs .nav-link:hover {
+  color: #f7931a;
+  background-color: #f8f9fa;
+}
+
+.admin-nav-tabs .nav-link.active {
+  color: #f7931a;
+  background-color: white;
+  border-bottom: 3px solid #f7931a;
+  font-weight: 600;
+}
+
+.admin-stat-card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.admin-stat-card .card-body {
+  padding: 20px;
+}
+
+.admin-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.admin-stat-icon.bg-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.admin-stat-icon.bg-info {
+  background: linear-gradient(135deg, #17a2b8, #117a8b);
+}
+
+.admin-stat-icon.bg-warning {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+.admin-stat-icon.bg-danger {
+  background: linear-gradient(135deg, #dc3545, #bd2130);
+}
+
+.table-responsive {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+  margin-bottom: 0;
+  background: white;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  padding: 15px;
+}
+
+.table tbody td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  border-top: 1px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 15px 20px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-outline-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.badge {
+  font-size: 0.75em;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #f7931a;
+  box-shadow: 0 0 0 0.2rem rgba(247, 147, 26, 0.25);
+}
+
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.form-check-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.alert {
+  border: none;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.alert-success {
+  background-color: #d1edff;
+  color: #0c5460;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 15px 15px 0 0;
+  padding: 20px;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #495057;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 15px 20px;
+  border-radius: 0 0 15px 15px;
+}
+
+.spinner-border {
+  color: #f7931a;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 10px 0;
+  }
+  
+  .admin-header {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .admin-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .admin-nav-tabs {
+    padding: 0 10px;
+  }
+  
+  .admin-nav-tabs .nav-link {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .admin-stat-card .card-body {
+    padding: 15px;
+  }
+  
+  .table {
+    font-size: 0.9rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 10px 8px;
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .admin-nav-tabs .nav-link {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .admin-stat-card h3 {
+    font-size: 1.5rem;
+  }
+  
+  .admin-stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  
+  .table {
+    font-size: 0.8rem;
+  }
+  
+  .table thead th,
+  .table tbody td {
+    padding: 8px 6px;
+  }
+}
+
+/* 다크모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .admin-page {
+    background-color: #1a1a1a;
+    color: #e9ecef;
+  }
+  
+  .card {
+    background-color: #2d3748;
+    color: #e9ecef;
+  }
+  
+  .card-header {
+    background-color: #374151;
+    color: #e9ecef;
+    border-bottom-color: #4a5568;
+  }
+  
+  .table {
+    background-color: #2d3748;
+    color: #e9ecef;
+  }
+  
+  .table thead th {
+    background-color: #374151;
+    color: #e9ecef;
+    border-bottom-color: #4a5568;
+  }
+  
+  .table tbody td {
+    border-top-color: #4a5568;
+  }
+  
+  .table tbody tr:hover {
+    background-color: #374151;
+  }
+  
+  .admin-nav-tabs {
+    background-color: #2d3748;
+    border-bottom-color: #4a5568;
+  }
+  
+  .admin-nav-tabs .nav-link {
+    color: #a0aec0;
+  }
+  
+  .admin-nav-tabs .nav-link:hover {
+    background-color: #374151;
+  }
+  
+  .admin-nav-tabs .nav-link.active {
+    background-color: #2d3748;
+  }
+  
+  .form-control,
+  .form-select {
+    background-color: #374151;
+    border-color: #4a5568;
+    color: #e9ecef;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    background-color: #374151;
+    border-color: #f7931a;
+    color: #e9ecef;
+  }
+  
+  .modal-content {
+    background-color: #2d3748;
+    color: #e9ecef;
+  }
+  
+  .modal-header {
+    background-color: #374151;
+    border-bottom-color: #4a5568;
+  }
+  
+  .modal-footer {
+    border-top-color: #4a5568;
+  }
+}
+
+/* 애니메이션 효과 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-stat-card,
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.admin-stat-card:nth-child(1) { animation-delay: 0.1s; }
+.admin-stat-card:nth-child(2) { animation-delay: 0.2s; }
+.admin-stat-card:nth-child(3) { animation-delay: 0.3s; }
+.admin-stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* 스크롤바 스타일링 */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 호버 효과 개선 */
+.btn-outline-danger:hover {
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.form-select:hover {
+  border-color: #f7931a;
+}
+
+/* 접근성 개선 */
+.btn:focus {
+  outline: 2px solid #f7931a;
+  outline-offset: 2px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  outline: none;
+}
+
+/* 로딩 상태 스타일 */
+.loading-overlay {
+  position: relative;
+}
+
+.loading-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 10;
+  border-radius: 10px;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+}
