@@ -220,7 +220,7 @@ class UserController {
       const { username } = req.params;
       
       const user = await database.query(
-        'SELECT id, username, email, bio, profile_picture, created_at FROM users WHERE username = ?',
+        'SELECT id, username, email, phone, bio, profile_picture, created_at FROM users WHERE username = ?',
         [username]
       );
       
@@ -249,7 +249,7 @@ class UserController {
       const { userId } = req.user; // 인증된 사용자 정보
       
       const user = await database.query(
-        'SELECT id, username, email, bio, profile_picture, created_at FROM users WHERE id = ?',
+        'SELECT id, username, email, phone, bio, profile_picture, created_at FROM users WHERE id = ?',
         [userId]
       );
       
@@ -268,7 +268,7 @@ class UserController {
   async updateProfile(req, res) {
     try {
       const { userId } = req.user;
-      const { bio, username } = req.body;
+      const { bio, username, phone } = req.body;
       
       // 사용자명 중복 검사 (현재 사용자 제외)
       if (username) {
@@ -286,6 +286,7 @@ class UserController {
       const updateData = {};
       if (bio !== undefined) updateData.bio = bio;
       if (username !== undefined) updateData.username = username;
+      if (phone !== undefined) updateData.phone = phone;
       
       if (Object.keys(updateData).length > 0) {
         await database.update('users', updateData, { id: userId });

@@ -9,7 +9,7 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ bio: '', username: '', imageUrl: '' });
+  const [editForm, setEditForm] = useState({ bio: '', username: '', phone: '', imageUrl: '' });
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   
   // 현재 로그인한 사용자 정보
@@ -55,6 +55,7 @@ const ProfilePage = () => {
         setEditForm({
           bio: profileData.user.bio || '',
           username: profileData.user.username,
+          phone: profileData.user.phone || '',
           imageUrl: ''
         });
         
@@ -107,7 +108,8 @@ const ProfilePage = () => {
         },
         body: JSON.stringify({
           bio: editForm.bio,
-          username: editForm.username
+          username: editForm.username,
+          phone: editForm.phone
         })
       });
 
@@ -121,7 +123,8 @@ const ProfilePage = () => {
         setProfile(prev => ({
           ...prev,
           bio: editForm.bio,
-          username: editForm.username
+          username: editForm.username,
+          phone: editForm.phone
         }));
       } else {
         const error = await response.json();
@@ -287,7 +290,6 @@ const ProfilePage = () => {
                   <i className="bi bi-telephone"></i> {profile.phone}
                 </p>
               )}
-              <p className="text-muted">가입일: {profile.joinDate}</p>
               <p>{profile.bio}</p>
               <div className="d-flex justify-content-center mb-3">
                 <div className="mx-3">
@@ -386,6 +388,20 @@ const ProfilePage = () => {
                 onChange={handleEditFormChange}
                 placeholder="사용자명을 입력하세요"
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>핸드폰 번호</Form.Label>
+              <Form.Control
+                type="tel"
+                name="phone"
+                value={editForm.phone}
+                onChange={handleEditFormChange}
+                placeholder="핸드폰 번호를 입력하세요 (예: 010-1234-5678)"
+              />
+              <Form.Text className="text-muted">
+                선택사항입니다. 01X-XXXX-XXXX 형식으로 입력해주세요.
+              </Form.Text>
             </Form.Group>
 
             <Form.Group className="mb-3">
