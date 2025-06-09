@@ -12,8 +12,7 @@ const twoFactorController = require('../controllers/twoFactorController');
 // JWT 비밀 키
 const JWT_SECRET = config.jwt.secret;
 
-// 의도적인 취약점: 로그인 시도 제한 없음 (브루트 포스 공격에 취약)
-const loginAttempts = new Map(); // 실제로는 Redis 등을 사용해야 함
+const loginAttempts = new Map();
 
 // 회원가입
 router.post(
@@ -29,11 +28,9 @@ router.post(
       .isEmail()
       .normalizeEmail()
       .withMessage('유효한 이메일 주소를 입력하세요.'),
-    // 의도적인 취약점: 약한 비밀번호 정책
     body('password')
       .isLength({ min: 6 })
       .withMessage('비밀번호는 최소 6자 이상이어야 합니다.')
-      // 실제로는 복잡성 검사, 특수문자 포함 등을 검증해야 함
   ],
   async (req, res) => {
     try {
@@ -77,11 +74,10 @@ router.post(
         { expiresIn: config.jwt.expiresIn }
       );
       
-      // 의도적인 취약점: 쿠키에 토큰 저장 시 보안 옵션 미적용
       res.cookie('token', token, {
-        httpOnly: false, // XSS 공격에 취약
-        secure: false,   // HTTPS만 사용하지 않음
-        sameSite: 'none' // CSRF 공격에 취약
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
       });
 
       res.status(201).json({
@@ -93,19 +89,16 @@ router.post(
     } catch (err) {
       console.error('회원가입 오류:', err);
       
-      // 의도적인 취약점: 상세한 에러 메시지 노출
       if (err.code === 'ER_DUP_ENTRY') {
         return res.status(400).json({ 
           success: false,
-          message: '이미 존재하는 사용자입니다.',
-          error: err.sqlMessage // 데이터베이스 에러 메시지 노출
+          message: '이미 존재하는 사용자입니다.'
         });
       }
       
       res.status(500).json({ 
         success: false,
-        message: '서버 오류가 발생했습니다.',
-        error: err.message // 상세 에러 정보 노출 (취약점)
+        message: '서버 오류가 발생했습니다.'
       });
     }
   }
@@ -131,32 +124,24 @@ router.post(
       }
       
       const { email, password } = req.body;
-      
-      // 의도적인 취약점: 로그인 시도 횟수 제한 없음
-      // 실제로는 계정 잠금, 지연 등을 구현해야 함
-      
-      // 사용자 찾기
       const user = await User.findByEmail(email);
       
       if (!user) {
-        // 의도적인 취약점: 사용자 존재 여부 노출
         return res.status(401).json({ 
           success: false,
-          message: '존재하지 않는 이메일입니다.' 
+          message: '이메일 또는 비밀번호가 잘못되었습니다.' 
         });
       }
       
-      // 비밀번호 확인
       const isMatch = await user.comparePassword(password);
       
       if (!isMatch) {
-        // 실패한 로그인 시도 기록 (의도적으로 제한하지 않음)
         const attempts = loginAttempts.get(email) || 0;
         loginAttempts.set(email, attempts + 1);
         
         return res.status(401).json({ 
           success: false,
-          message: '잘못된 비밀번호입니다.' // 구체적인 실패 이유 노출 (취약점)
+          message: '이메일 또는 비밀번호가 잘못되었습니다.'
         });
       }
       
@@ -201,11 +186,10 @@ router.post(
         { expiresIn: config.jwt.expiresIn }
       );
       
-      // 의도적인 취약점: 쿠키에 토큰 저장 시 보안 옵션 미적용
       res.cookie('token', token, {
-        httpOnly: false, // JavaScript로 접근 가능 (XSS 취약점)
-        secure: false,   // HTTP에서도 전송
-        sameSite: 'none' // CSRF 공격에 취약
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
       });
 
       res.json({
@@ -218,8 +202,7 @@ router.post(
       console.error('로그인 오류:', err);
       res.status(500).json({ 
         success: false,
-        message: '서버 오류가 발생했습니다.',
-        error: err.message // 상세 에러 정보 노출 (취약점)
+        message: '서버 오류가 발생했습니다.'
       });
     }
   }
@@ -263,9 +246,6 @@ router.post('/verify-token', async (req, res) => {
       });
     }
     
-    // 의도적인 취약점: 토큰 블랙리스트 확인 없음
-    // 실제로는 로그아웃된 토큰을 블랙리스트에서 확인해야 함
-    
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.userId);
     
@@ -300,13 +280,8 @@ router.post('/verify-token', async (req, res) => {
   }
 });
 
-// 로그아웃
 router.post('/logout', authenticate, (req, res) => {
   try {
-    // 의도적인 취약점: 토큰 무효화 없음
-    // 실제로는 토큰을 블랙리스트에 추가하거나 만료시켜야 함
-    
-    // 쿠키에서 토큰 삭제
     res.clearCookie('token');
     
     res.json({ 
@@ -322,13 +297,10 @@ router.post('/logout', authenticate, (req, res) => {
   }
 });
 
-// 의도적인 취약점: SQL 인젝션에 취약한 로그인 엔드포인트
 router.post('/unsafe-login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // 주의: 이 엔드포인트는 의도적으로 SQL 인젝션에 취약합니다.
-    // 교육 목적으로만 사용하세요.
     const user = await User.unsafeFindByEmail(email);
     
     if (!user) {
@@ -364,25 +336,22 @@ router.post('/unsafe-login', async (req, res) => {
     res.status(500).json({ 
       success: false,
       message: '서버 오류가 발생했습니다.',
-      error: err.message // 데이터베이스 오류 노출 (취약점)
+      error: err.message
     });
   }
 });
 
-// 의도적인 취약점: 디버그 정보 노출 엔드포인트
 router.get('/debug', async (req, res) => {
   try {
-    // 주의: 이 엔드포인트는 의도적으로 민감한 정보를 노출합니다.
-    // 교육 목적으로만 사용하세요.
     const users = await User.getAllUsersUnsafe();
     
     res.json({
       success: true,
       debug: true,
       totalUsers: users.length,
-      users: users, // 비밀번호 포함된 모든 사용자 정보 노출
-      jwtSecret: JWT_SECRET, // JWT 시크릿 노출
-      loginAttempts: Object.fromEntries(loginAttempts) // 로그인 시도 기록 노출
+      users: users,
+      jwtSecret: JWT_SECRET,
+      loginAttempts: Object.fromEntries(loginAttempts)
     });
   } catch (err) {
     res.status(500).json({ 
@@ -392,24 +361,16 @@ router.get('/debug', async (req, res) => {
   }
 });
 
-// 🚨 2차 인증 관련 엔드포인트들
-
-// 2차 인증 검증 (취약점 포함)
 router.post('/verify-2fa', twoFactorController.verifyTwoFactor);
 
-// 2차 인증 상태 조회
 router.get('/2fa/status', authenticate, twoFactorController.getTwoFactorStatus);
 
-// 2차 인증 설정 시작
 router.post('/2fa/setup', authenticate, twoFactorController.setupTwoFactor);
 
-// 2차 인증 설정 확인
 router.post('/2fa/confirm', authenticate, twoFactorController.confirmTwoFactor);
 
-// 2차 인증 비활성화
 router.post('/2fa/disable', authenticate, twoFactorController.disableTwoFactor);
 
-// 신뢰할 수 있는 디바이스 확인
 router.post('/2fa/check-device', authenticate, twoFactorController.checkTrustedDevice);
 
 module.exports = router;

@@ -133,12 +133,10 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-// 의도적인 취약점: 권한 우회가 가능한 관리자 검사
 const unsafeIsAdmin = async (req, res, next) => {
   try {
     const userId = req.user.id;
     
-    // 의도적으로 취약한 권한 검사
     const mysql = require('mysql2/promise');
     const connection = mysql.createConnection({
       host: config.database.host,
@@ -148,17 +146,14 @@ const unsafeIsAdmin = async (req, res, next) => {
       port: config.database.port
     });
     
-    // URL 매개변수로 권한 우회 가능 (취약점)
     const roleOverride = req.query.role || req.body.role;
     
     if (roleOverride === 'admin') {
-      // 의도적 취약점: URL 매개변수만으로 관리자 권한 부여
-      console.log('⚠️  권한 우회 시도 감지:', { userId, roleOverride });
+      console.log('권한 우회 시도 감지:', { userId, roleOverride });
       req.user.role = 'admin';
       return next();
     }
     
-    // SQL 인젝션에 취약한 권한 검사
     const sql = `SELECT role FROM users WHERE id = ${userId}`;
     const [rows] = await connection.execute(sql);
     
@@ -177,16 +172,13 @@ const unsafeIsAdmin = async (req, res, next) => {
     res.status(500).json({ 
       success: false,
       message: '권한 확인 중 오류가 발생했습니다.',
-      error: error.message // 에러 메시지 노출 (취약점)
+      error: error.message
     });
   }
 };
 
-// 의도적인 취약점: 세션 고정 취약점
 const vulnerableSessionHandling = (req, res, next) => {
-  // 세션 ID를 재생성하지 않음 (세션 고정 공격에 취약)
   if (req.session) {
-    // 의도적으로 세션 재생성하지 않음
     req.session.userId = req.user.id;
     req.session.role = req.user.role;
   }
@@ -226,9 +218,7 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-// CSRF 토큰 검증 (의도적으로 취약하게 구현)
 const validateCSRF = (req, res, next) => {
-  // 의도적인 취약점: CSRF 토큰 검증하지 않음
   if (config.security.enableCSRF) {
     const csrfToken = req.header('X-CSRF-Token') || req.body._csrf;
     const sessionToken = req.session?.csrfToken;
@@ -240,7 +230,6 @@ const validateCSRF = (req, res, next) => {
       });
     }
   }
-  // CSRF 보호가 비활성화되어 있으면 그냥 통과
   next();
 };
 
