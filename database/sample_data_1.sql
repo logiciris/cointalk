@@ -1,12 +1,13 @@
 -- CoinTalk 샘플 데이터 (1): 사용자, 코인, 태그 데이터
 
--- 사용자 데이터 (비밀번호: 'password123' 해시)
+-- 사용자 데이터 (개별 비밀번호 설정)
+-- admin: CoinTalk2025! / bitcoinenthusiast: BitcoinMoon$ / cryptotrader: TradePro88# / defimaster: DeFi_Builder99 / nftcollector: DigitalArt*2025
 INSERT INTO users (username, email, password, profile_picture, bio, role) VALUES
-('admin', 'admin@cointalk.com', '$2b$10$6j7NCIvLjJ1Ps7wZ9/E5UeQlG6Y/uVn4Z5Ej.tKZCwpPazRfC.FJK', 'admin.png', '관리자 계정입니다.', 'admin'),
-('bitcoinenthusiast', 'bitcoin@example.com', '$2b$10$6j7NCIvLjJ1Ps7wZ9/E5UeQlG6Y/uVn4Z5Ej.tKZCwpPazRfC.FJK', 'user1.png', '비트코인 애호가입니다. 암호화폐 시장 분석과 트렌드에 관심이 많습니다.', 'user'),
-('cryptotrader', 'trader@example.com', '$2b$10$6j7NCIvLjJ1Ps7wZ9/E5UeQlG6Y/uVn4Z5Ej.tKZCwpPazRfC.FJK', 'user2.png', '풀타임 암호화폐 트레이더. 기술적 분석 전문가.', 'user'),
-('defimaster', 'defi@example.com', '$2b$10$6j7NCIvLjJ1Ps7wZ9/E5UeQlG6Y/uVn4Z5Ej.tKZCwpPazRfC.FJK', 'user3.png', 'DeFi 플랫폼 개발자. 탈중앙화 금융의 미래를 만들어갑니다.', 'user'),
-('nftcollector', 'nft@example.com', '$2b$10$6j7NCIvLjJ1Ps7wZ9/E5UeQlG6Y/uVn4Z5Ej.tKZCwpPazRfC.FJK', 'user4.png', 'NFT 수집가이자 디지털 아트 애호가.', 'user');
+('admin', 'admin@cointalk.com', '$2a$10$x..KH4UjKbwP2bZu5lH72uvg2caMLGbYUy3VsaYrs5kuvQYsE0nce', 'admin.png', '관리자 계정입니다.', 'admin'),
+('bitcoinenthusiast', 'bitcoin@example.com', '$2a$10$jvPrKAuDuqZXNOGqNED8JO9QfT2MX0PDQOfmlxlvZG6hKguPZ6oZy', 'user1.png', '비트코인 애호가입니다. 암호화폐 시장 분석과 트렌드에 관심이 많습니다.', 'user'),
+('cryptotrader', 'trader@example.com', '$2a$10$g.pExAwlUgMRL7vrV3LcwOv/HAjh7ZaAfr8LRe7fGZZXN/3Xti8Qm', 'user2.png', '풀타임 암호화폐 트레이더. 기술적 분석 전문가.', 'user'),
+('defimaster', 'defi@example.com', '$2a$10$nMOTJQgXpNOB4l44dFfw0.2ILNn3mLa6AKtCd4fXMoPx4g9OTvpYS', 'user3.png', 'DeFi 플랫폼 개발자. 탈중앙화 금융의 미래를 만들어갑니다.', 'user'),
+('nftcollector', 'nft@example.com', '$2a$10$FBHphAOSHITYhWydWedJ1OSFHCpgm.r9PezMQOqvZ/0CdUnpcE6Qm', 'user4.png', 'NFT 수집가이자 디지털 아트 애호가.', 'user');
 
 -- 코인 데이터
 INSERT INTO coins (name, symbol, description, logo_url, website, price, market_cap, volume_24h, change_24h) VALUES
