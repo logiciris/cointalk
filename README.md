@@ -123,32 +123,6 @@ docker exec -it cointalk-mysql-1 mysql -u root -proot_password cointalk < databa
 ### 프로필 페이지
 개인 프로필에서 작성한 게시물과 좋아요한 콘텐츠를 관리하세요.
 
-## 🔧 API 문서
-
-### 인증
-```
-POST /api/auth/register - 회원가입
-POST /api/auth/login - 로그인
-POST /api/auth/logout - 로그아웃
-POST /api/auth/verify-2fa - 2차 인증 검증
-```
-
-### 게시물
-```
-GET /api/posts - 게시물 목록
-POST /api/posts - 게시물 작성
-GET /api/posts/:id - 게시물 상세
-PUT /api/posts/:id - 게시물 수정
-DELETE /api/posts/:id - 게시물 삭제
-```
-
-### 사용자
-```
-GET /api/users/profile/:username - 사용자 프로필
-PUT /api/users/profile - 프로필 수정
-PUT /api/users/change-password - 비밀번호 변경
-```
-
 ## 📊 프로젝트 구조
 
 ```
@@ -194,8 +168,8 @@ CoinTalk 프로젝트에 기여해주세요!
 
 ## 📞 문의
 
-- 프로젝트 링크: [https://github.com/yourusername/cointalk](https://github.com/yourusername/cointalk)
-- 이슈 리포트: [GitHub Issues](https://github.com/yourusername/cointalk/issues)
+- 프로젝트 링크: [https://github.com/logiciris/cointalk](https://github.com/yourusername/cointalk)
+- 이슈 리포트: [GitHub Issues](https://github.com/logiciris/cointalk/issues)
 
 ## 🙏 감사의 말
 
