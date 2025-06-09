@@ -28,6 +28,10 @@ router.post(
       .isEmail()
       .normalizeEmail()
       .withMessage('유효한 이메일 주소를 입력하세요.'),
+    body('phone')
+      .optional()
+      .matches(/^01[0-9]{1}-?[0-9]{3,4}-?[0-9]{4}$/)
+      .withMessage('올바른 핸드폰 번호 형식을 입력하세요.'),
     body('password')
       .isLength({ min: 6 })
       .withMessage('비밀번호는 최소 6자 이상이어야 합니다.')
@@ -44,7 +48,7 @@ router.post(
         });
       }
       
-      const { username, email, password } = req.body;
+      const { username, email, password, phone } = req.body;
       
       // 사용자 중복 확인
       const existingUser = await User.findByEmailOrUsername(email, username);
@@ -60,7 +64,8 @@ router.post(
       const newUser = await User.create({
         username,
         email,
-        password
+        password,
+        phone
       });
       
       // JWT 토큰 생성

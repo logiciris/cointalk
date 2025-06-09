@@ -277,6 +277,16 @@ const ProfilePage = () => {
                 className="mb-3"
               />
               <h3>{profile.username}</h3>
+              {profile.email && (
+                <p className="text-muted">
+                  <i className="bi bi-envelope"></i> {profile.email}
+                </p>
+              )}
+              {profile.phone && (
+                <p className="text-muted">
+                  <i className="bi bi-telephone"></i> {profile.phone}
+                </p>
+              )}
               <p className="text-muted">가입일: {profile.joinDate}</p>
               <p>{profile.bio}</p>
               <div className="d-flex justify-content-center mb-3">

@@ -23,6 +23,7 @@ class User {
     this.id = data.id;
     this.username = data.username;
     this.email = data.email;
+    this.phone = data.phone;
     this.password = data.password;
     this.profile_picture = data.profile_picture || 'default-profile.png';
     this.bio = data.bio;
@@ -44,14 +45,15 @@ class User {
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
 
       const query = `
-        INSERT INTO users (username, email, password, profile_picture, bio, role, 
+        INSERT INTO users (username, email, phone, password, profile_picture, bio, role, 
                           notifications_enabled, private_profile, two_factor_enabled)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       const [result] = await connection.execute(query, [
         userData.username,
         userData.email,
+        userData.phone || null,
         hashedPassword,
         userData.profile_picture || 'default-profile.png',
         userData.bio || null,

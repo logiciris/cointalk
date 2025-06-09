@@ -5,6 +5,7 @@ CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(20) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(20) DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
     profile_picture VARCHAR(255) DEFAULT 'default-profile.png',
     bio TEXT,

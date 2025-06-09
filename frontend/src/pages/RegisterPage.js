@@ -9,7 +9,8 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,7 +22,7 @@ const RegisterPage = () => {
   
   const { loading, error, isAuthenticated, message } = useSelector(state => state.auth);
 
-  const { username, email, password, confirmPassword } = formData;
+  const { username, email, password, confirmPassword, phone } = formData;
 
   // 이미 로그인된 사용자는 홈으로 리다이렉트
   useEffect(() => {
@@ -97,6 +98,15 @@ const RegisterPage = () => {
         }
         break;
       
+      case 'phone':
+        const phoneRegex = /^01[0-9]{1}-?[0-9]{3,4}-?[0-9]{4}$/;
+        if (value && !phoneRegex.test(value.replace(/-/g, ''))) {
+          errors.phone = '올바른 핸드폰 번호 형식을 입력해주세요. (예: 010-1234-5678)';
+        } else {
+          delete errors.phone;
+        }
+        break;
+      
       default:
         break;
     }
@@ -140,7 +150,8 @@ const RegisterPage = () => {
       const result = await dispatch(register({
         username,
         email,
-        password
+        password,
+        phone
       }));
       
       if (result.success) {
@@ -207,6 +218,25 @@ const RegisterPage = () => {
                   <Form.Control.Feedback type="invalid">
                     {validationErrors.email}
                   </Form.Control.Feedback>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>핸드폰 번호</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    placeholder="핸드폰 번호를 입력하세요 (예: 010-1234-5678)"
+                    name="phone"
+                    value={phone}
+                    onChange={onChange}
+                    disabled={loading}
+                    isInvalid={!!validationErrors.phone}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {validationErrors.phone}
+                  </Form.Control.Feedback>
+                  <Form.Text className="text-muted">
+                    선택사항입니다. 01X-XXXX-XXXX 형식으로 입력해주세요.
+                  </Form.Text>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -319,23 +349,6 @@ const RegisterPage = () => {
                 <p>
                   이미 계정이 있으신가요? <Link to="/login">로그인</Link>
                 </p>
-              </div>
-
-              <hr />
-
-              {/* 의도적인 취약점: 클라이언트 사이드에서 비밀번호 표시 */}
-              <div className="text-center">
-                <small className="text-muted">
-                  개발 모드: <Button 
-                    variant="link" 
-                    size="sm" 
-                    onClick={() => {
-                      alert(`입력된 비밀번호: ${password}`); // 취약점: 민감한 정보 노출
-                    }}
-                  >
-                    비밀번호 확인
-                  </Button>
-                </small>
               </div>
             </Card.Body>
           </Card>
