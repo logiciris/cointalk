@@ -85,7 +85,6 @@ docker-compose logs -f
 3. **접속**
 - 메인 애플리케이션: http://localhost:3000
 - API 서버: http://localhost:5000
-- 관리자 패널: http://localhost:3000/admin
 
 ### 개발 환경 설정
 
