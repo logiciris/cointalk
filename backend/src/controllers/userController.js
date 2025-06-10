@@ -223,23 +223,6 @@ class UserController {
           two_factor_enabled: true
         },
         info: `모든 계정에는 보안을 위해 2차 인증이 기본 활성화됩니다. 당신의 2차 인증 코드: ${twoFactorCode}`
-      });_factor_enabled: false  // 🔧 기본적으로 2차 인증 비활성화, 사용자가 나중에 설정 가능
-      });
-      
-      const userId = result.insertId;
-      
-      console.log(`✅ New user ${username} registered successfully`);
-      
-      res.status(201).json({
-        success: true,
-        message: '회원가입이 완료되었습니다.',
-        user: {
-          id: userId,
-          username,
-          email,
-          role: 'user',
-          two_factor_enabled: false
-        }
       });
     } catch (error) {
       console.error('Register error:', error);

@@ -18,8 +18,9 @@ if errorlevel 1 (
 
 echo Docker 환경 확인 완료
 
-echo 기존 컨테이너 정리 중...
+echo 기존 컨테이너 및 데이터 완전 정리 중...
 docker-compose down -v --remove-orphans 2>nul
+docker system prune -f 2>nul
 
 if not exist .env (
     echo 환경설정 파일 생성 중...
@@ -34,7 +35,7 @@ echo Docker 컨테이너 빌드 및 실행 중...
 docker-compose up --build -d
 
 echo 서비스 초기화 대기 중... (최대 3분)
-timeout /t 60 /nobreak >nul
+timeout /t 90 /nobreak >nul
 
 echo.
 echo 서비스 상태 확인:
@@ -52,6 +53,7 @@ echo 테스트 계정:
 echo    ID: test2
 echo    PW: testpass123
 echo.
+echo 새 계정 회원가입 시 2FA 코드가 발급됩니다
 echo 로그 확인: docker-compose logs -f
 echo 종료: docker-compose down
 

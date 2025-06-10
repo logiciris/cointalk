@@ -29,27 +29,10 @@ fi
 
 echo -e "${GREEN}✅ Docker 환경 확인 완료${NC}"
 
-# 포트 사용 확인
-check_port() {
-    if lsof -Pi :$1 -sTCP:LISTEN -t >/dev/null ; then
-        echo -e "${YELLOW}⚠️  포트 $1이 사용 중입니다.${NC}"
-        return 1
-    fi
-    return 0
-}
-
-echo "🔍 포트 사용 상태 확인 중..."
-PORTS=(80 3000 5000 3306 6379)
-for port in "${PORTS[@]}"; do
-    if ! check_port $port; then
-        echo -e "${RED}❌ 포트 $port가 이미 사용 중입니다. 프로세스를 종료하거나 다른 포트를 사용하세요.${NC}"
-        # exit 1  # 경고만 하고 계속 진행
-    fi
-done
-
-# 기존 컨테이너 정리
-echo "🧹 기존 컨테이너 정리 중..."
+# 기존 컨테이너 완전 정리
+echo "🧹 기존 컨테이너 및 데이터 완전 정리 중..."
 docker-compose down -v --remove-orphans 2>/dev/null || true
+docker system prune -f 2>/dev/null || true
 
 # 환경설정 파일 복사
 if [ ! -f .env ]; then
@@ -63,12 +46,12 @@ docker-compose up --build -d
 
 echo "⏳ 서비스 초기화 대기 중... (최대 3분)"
 
-# MySQL 초기화 대기
+# MySQL 초기화 대기 (개선된 방법)
 echo "🗄️  MySQL 초기화 대기 중..."
 timeout=180
 count=0
 while [ $count -lt $timeout ]; do
-    if docker-compose logs mysql 2>/dev/null | grep -q "ready for connections" ; then
+    if docker-compose exec -T mysql mysqladmin ping -h localhost --silent 2>/dev/null; then
         echo -e "${GREEN}✅ MySQL 초기화 완료${NC}"
         break
     fi
@@ -79,14 +62,15 @@ done
 
 if [ $count -ge $timeout ]; then
     echo -e "${RED}❌ MySQL 초기화 타임아웃${NC}"
+    echo "로그 확인: docker-compose logs mysql"
     exit 1
 fi
 
-# 백엔드 시작 대기
+# 백엔드 서비스 시작 대기
 echo "🔧 백엔드 서비스 시작 대기 중..."
 count=0
 while [ $count -lt 60 ]; do
-    if docker-compose logs backend 2>/dev/null | grep -q "Database connection test successful" ; then
+    if curl -s http://localhost:5000/api/debug > /dev/null 2>&1; then
         echo -e "${GREEN}✅ 백엔드 서비스 시작 완료${NC}"
         break
     fi
@@ -99,7 +83,7 @@ done
 echo "🎨 프론트엔드 서비스 시작 대기 중..."
 count=0
 while [ $count -lt 60 ]; do
-    if docker-compose logs frontend 2>/dev/null | grep -q "webpack compiled" ; then
+    if curl -s http://localhost:3000 > /dev/null 2>&1; then
         echo -e "${GREEN}✅ 프론트엔드 서비스 시작 완료${NC}"
         break
     fi
@@ -113,15 +97,6 @@ echo ""
 echo "📊 서비스 상태 확인:"
 docker-compose ps
 
-# 접속 가능 여부 테스트
-echo ""
-echo "🌐 접속 테스트 중..."
-if curl -s http://localhost:5000/api/debug > /dev/null; then
-    echo -e "${GREEN}✅ API 서버 정상 작동${NC}"
-else
-    echo -e "${YELLOW}⚠️  API 서버 아직 준비 중... 잠시 후 다시 시도하세요${NC}"
-fi
-
 echo ""
 echo "🎉 CoinTalk 설치 완료!"
 echo ""
@@ -134,6 +109,7 @@ echo "🔐 테스트 계정:"
 echo "   ID: test2"
 echo "   PW: testpass123"
 echo ""
+echo "💡 새 계정 회원가입 시 2FA 코드가 발급됩니다"
 echo "📝 로그 확인: docker-compose logs -f"
 echo "🛑 종료: docker-compose down"
 echo ""
