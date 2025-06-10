@@ -1,0 +1,19 @@
+# Git 인코딩 및 줄바꿈 설정
+*.sql text eol=lf encoding=utf-8
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# 바이너리 파일
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

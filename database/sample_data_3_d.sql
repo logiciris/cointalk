@@ -1,3 +1,7 @@
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- CoinTalk 샘플 데이터 (3D): 북마크 및 알림 데이터
 
 -- 북마크 데이터

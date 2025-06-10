@@ -29,10 +29,11 @@ fi
 
 echo -e "${GREEN}✅ Docker 환경 확인 완료${NC}"
 
-# 기존 컨테이너 완전 정리
+# 기존 컨테이너 완전 정리 (인코딩 문제 해결)
 echo "🧹 기존 컨테이너 및 데이터 완전 정리 중..."
 docker-compose down -v --remove-orphans 2>/dev/null || true
 docker system prune -f 2>/dev/null || true
+docker volume prune -f 2>/dev/null || true
 
 # 환경설정 파일 복사
 if [ ! -f .env ]; then

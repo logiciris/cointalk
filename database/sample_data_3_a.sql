@@ -1,3 +1,7 @@
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- CoinTalk 샘플 데이터 (3): 관계 데이터(게시물-태그, 게시물-코인, 댓글, 좋아요 등)
 
 -- 게시물-태그 연결 데이터

@@ -1,5 +1,9 @@
 -- CoinTalk 샘플 데이터 (3B): 댓글 데이터
 
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- 댓글 데이터
 INSERT INTO comments (post_id, user_id, content) VALUES
 -- 비트코인 상승세 게시물의 댓글

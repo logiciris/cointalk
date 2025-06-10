@@ -1,3 +1,7 @@
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- CoinTalk MySQL 데이터베이스 스키마
 
 -- 사용자 테이블

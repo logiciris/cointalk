@@ -1,3 +1,7 @@
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- 2차 인증 관련 테이블
 
 -- 2차 인증 설정 테이블

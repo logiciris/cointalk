@@ -1,3 +1,7 @@
+-- 문자셋 설정 (Windows 호환성)
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET CHARACTER SET utf8mb4;
+
 -- CoinTalk 샘플 데이터 (1): 사용자, 코인, 태그 데이터
 
 -- 사용자 데이터 (개별 비밀번호 설정)
