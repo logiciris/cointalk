@@ -246,10 +246,9 @@ class TwoFactorController {
         backupCodes = [];
       }
       
-      // TOTP 코드 검증
-      const currentTime = Math.floor(Date.now() / 1000 / 30);
-      // 🚨 교육용 - 사용자별 고정 코드 (secret_key 직접 사용)
-      const expectedCode = secretKey;
+      // TOTP 코드 검증 - 6자리 숫자로 변환
+      // 🚨 교육용 - secret_key를 6자리 숫자로 변환
+      const expectedCode = secretKey.slice(-6); // 마지막 6자리 사용
       
       if (code === expectedCode) {
         isValidCode = true;
@@ -332,10 +331,10 @@ class TwoFactorController {
     }
   }
   
-  // 단순한 TOTP 구현 - 사용자별 코드 (교육용)
+  // 단순한 TOTP 구현 - 6자리 숫자 코드 생성 (교육용)
   generateTOTP(secret, timeStep) {
-    // 🚨 교육용 고정 코드 - 사용자별 secret_key 사용
-    return secret; // secret_key가 6자리 숫자로 설정됨
+    // 🚨 교육용 고정 코드 - secret_key를 6자리 숫자로 변환
+    return secret.slice(-6); // 마지막 6자리 사용
   }
   
   // 신뢰할 수 있는 디바이스 확인
