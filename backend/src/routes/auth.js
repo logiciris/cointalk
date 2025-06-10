@@ -91,8 +91,8 @@ router.post(
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10분 후 만료
         
         await database.query(
-          'INSERT INTO two_factor_sessions (id, user_id, expires_at) VALUES (?, ?, ?)',
-          [sessionId, user.id, expiresAt]
+          'INSERT INTO two_factor_sessions (id, user_id, email, expires_at) VALUES (?, ?, ?, ?)',
+          [sessionId, user.id, user.email, expiresAt]
         );
         
         return res.json({
