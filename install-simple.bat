@@ -35,7 +35,7 @@ echo Docker 컨테이너 빌드 및 실행 중...
 docker-compose up --build -d
 
 echo 서비스 초기화 대기 중... (최대 3분)
-timeout /t 90 /nobreak >nul
+ping 127.0.0.1 -n 91 >nul
 
 echo.
 echo 서비스 상태 확인:
