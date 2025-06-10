@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Image, Button, Nav, Tab, Modal, Form, Alert } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
+import DefaultAvatar from '../components/common/DefaultAvatar';
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -9,7 +10,7 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ bio: '', username: '', phone: '', imageUrl: '' });
+  const [editForm, setEditForm] = useState({ bio: '', imageUrl: '' });
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   
   // 현재 로그인한 사용자 정보
@@ -54,9 +55,7 @@ const ProfilePage = () => {
         
         setEditForm({
           bio: profileData.user.bio || '',
-          username: profileData.user.username,
-          phone: profileData.user.phone || '',
-          imageUrl: ''
+          imageUrl: profileData.user.profile_picture || ''
         });
         
       } catch (error) {
@@ -107,9 +106,7 @@ const ProfilePage = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          bio: editForm.bio,
-          username: editForm.username,
-          phone: editForm.phone
+          bio: editForm.bio
         })
       });
 
@@ -122,9 +119,7 @@ const ProfilePage = () => {
         // 프로필 정보 갱신
         setProfile(prev => ({
           ...prev,
-          bio: editForm.bio,
-          username: editForm.username,
-          phone: editForm.phone
+          bio: editForm.bio
         }));
       } else {
         const error = await response.json();
@@ -170,87 +165,29 @@ const ProfilePage = () => {
       const result = await response.json();
 
       if (response.ok) {
-        // 디버그 정보 표시 (SSRF 결과 확인용)
-        if (result.debug_info) {
-          console.log('SSRF Response:', result.debug_info);
-          
-          // 응답 미리보기를 localStorage에 저장 (콘솔에서도 확인 가능)
-          localStorage.setItem('ssrf_response', result.debug_info.response_preview);
-          
-          setAlert({ 
-            show: true, 
-            type: 'warning', 
-            message: (
-              <div>
-                <strong>요청이 완료되었습니다.</strong>
-                <br />
-                <small>상태 코드: {result.debug_info.response_status}</small>
-                <br />
-                <small>응답 내용:</small>
-                <pre style={{
-                  background: '#f8f9fa',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  marginTop: '5px',
-                  maxHeight: '200px',
-                  overflow: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-all'
-                }}>
-                  {result.debug_info.response_preview}
-                </pre>
-                <small>
-                  <strong>개발자 도구 콘솔에서 전체 응답 확인 가능</strong>
-                </small>
-              </div>
-            )
-          });
-        } else {
-          setAlert({ 
-            show: true, 
-            type: 'success', 
-            message: result.message 
-          });
-        }
+        setAlert({ 
+          show: true, 
+          type: 'success', 
+          message: '프로필 이미지가 업데이트되었습니다.' 
+        });
         
-        // 프로필 이미지 업데이트 (실제 이미지 URL인 경우)
-        if (editForm.imageUrl.includes('http') && !editForm.imageUrl.includes('admin-api') && !editForm.imageUrl.includes('monitoring')) {
+        // 프로필 이미지 업데이트 및 입력 필드 초기화
+        if (editForm.imageUrl.includes('http')) {
           setProfile(prev => ({
             ...prev,
             profilePicture: editForm.imageUrl
+          }));
+          // 성공적으로 저장된 후 입력 필드 초기화
+          setEditForm(prev => ({
+            ...prev,
+            imageUrl: ''
           }));
         }
       } else {
         setAlert({ 
           show: true, 
           type: 'danger', 
-          message: (
-            <div>
-              <strong>Error: {result.message}</strong>
-              {result.error && (
-                <div>
-                  <br />
-                  <small>Details: {result.error}</small>
-                </div>
-              )}
-              {result.system_info && (
-                <div>
-                  <br />
-                  <small>System Info:</small>
-                  <pre style={{
-                    background: '#f8f9fa',
-                    padding: '5px',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    marginTop: '5px'
-                  }}>
-                    {JSON.stringify(result.system_info, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )
+          message: result.message || '이미지 업데이트에 실패했습니다.'
         });
       }
     } catch (error) {
@@ -272,20 +209,33 @@ const ProfilePage = () => {
         <Col md={4}>
           <Card>
             <Card.Body className="text-center">
-              <Image
-                src={profile.profilePicture}
-                roundedCircle
-                width={150}
-                height={150}
-                className="mb-3"
-              />
+              {profile.profilePicture && profile.profilePicture !== 'default-profile.png' ? (
+                <Image
+                  src={profile.profilePicture}
+                  roundedCircle
+                  width={150}
+                  height={150}
+                  className="mb-3"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+              ) : null}
+              <div style={{ display: profile.profilePicture && profile.profilePicture !== 'default-profile.png' ? 'none' : 'flex', justifyContent: 'center' }}>
+                <DefaultAvatar 
+                  username={profile.username} 
+                  size={150}
+                  className="mb-3"
+                />
+              </div>
               <h3>{profile.username}</h3>
-              {profile.email && (
+              {isOwnProfile && profile.email && (
                 <p className="text-muted">
                   <i className="bi bi-envelope"></i> {profile.email}
                 </p>
               )}
-              {profile.phone && (
+              {isOwnProfile && profile.phone && (
                 <p className="text-muted">
                   <i className="bi bi-telephone"></i> {profile.phone}
                 </p>
@@ -380,31 +330,6 @@ const ProfilePage = () => {
           
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>사용자명</Form.Label>
-              <Form.Control
-                type="text"
-                name="username"
-                value={editForm.username}
-                onChange={handleEditFormChange}
-                placeholder="사용자명을 입력하세요"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>핸드폰 번호</Form.Label>
-              <Form.Control
-                type="tel"
-                name="phone"
-                value={editForm.phone}
-                onChange={handleEditFormChange}
-                placeholder="핸드폰 번호를 입력하세요 (예: 010-1234-5678)"
-              />
-              <Form.Text className="text-muted">
-                선택사항입니다. 01X-XXXX-XXXX 형식으로 입력해주세요.
-              </Form.Text>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
               <Form.Label>자기소개</Form.Label>
               <Form.Control
                 as="textarea"
@@ -438,7 +363,7 @@ const ProfilePage = () => {
             취소
           </Button>
           <Button variant="primary" onClick={handleUpdateProfile}>
-            기본 정보 저장
+            정보 저장
           </Button>
           <Button variant="info" onClick={handleUpdateProfileImage}>
             이미지 URL 적용

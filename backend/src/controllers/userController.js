@@ -150,7 +150,18 @@ class UserController {
   // 사용자 등록 (안전한 버전) - 2차 인증 자동 활성화
   async register(req, res) {
     try {
-      const { username, email, password } = req.body;
+      // 유효성 검사 오류 확인
+      const { validationResult } = require('express-validator');
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+          success: false,
+          message: '입력값이 유효하지 않습니다.',
+          errors: errors.array() 
+        });
+      }
+      
+      const { username, email, password, phone } = req.body;
       
       // 이메일 또는 사용자명 중복 검사
       const existingUser = await database.query(
@@ -159,7 +170,10 @@ class UserController {
       );
       
       if (existingUser && existingUser.length > 0) {
-        return res.status(400).json({ message: '이미 사용 중인 이메일 또는 사용자명입니다.' });
+        return res.status(400).json({ 
+          success: false,
+          message: '이미 사용 중인 이메일 또는 사용자명입니다.' 
+        });
       }
       
       // 비밀번호 해시 생성
@@ -171,6 +185,7 @@ class UserController {
         username,
         email,
         password: hashedPassword,
+        phone: phone || null,
         role: 'user',
         two_factor_enabled: true  // 🚨 모든 신규 사용자에게 2차 인증 활성화
       });
@@ -197,8 +212,9 @@ class UserController {
       res.status(201).json({
         success: true,
         requiresTwoFactor: true,
-        twoFactorCode: twoFactorCode, // 🚨 사용자에게 2차 인증 코드 제공
-        message: '회원가입이 완료되었습니다. 보안을 위해 2차 인증을 진행해주세요.',
+        twoFactorCode: twoFactorCode,
+        backupCodes: backupCodes,
+        message: '회원가입이 완료되었습니다. 보안을 위해 2차 인증이 활성화되었습니다.',
         user: {
           id: userId,
           username,
@@ -210,7 +226,18 @@ class UserController {
       });
     } catch (error) {
       console.error('Register error:', error);
-      res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+      
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ 
+          success: false,
+          message: '이미 존재하는 사용자입니다.'
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: '서버 오류가 발생했습니다.' 
+      });
     }
   }
 
@@ -246,7 +273,7 @@ class UserController {
   // 프로필 정보 조회 (안전한 버전)
   async getProfile(req, res) {
     try {
-      const { userId } = req.user; // 인증된 사용자 정보
+      const userId = req.user.id; // 인증된 사용자 정보
       
       const user = await database.query(
         'SELECT id, username, email, phone, bio, profile_picture, created_at FROM users WHERE id = ?',
@@ -267,7 +294,7 @@ class UserController {
   // 프로필 정보 업데이트 (안전한 버전)
   async updateProfile(req, res) {
     try {
-      const { userId } = req.user;
+      const userId = req.user.id;
       const { bio, username, phone } = req.body;
       
       // 사용자명 중복 검사 (현재 사용자 제외)
@@ -302,7 +329,7 @@ class UserController {
   // 비밀번호 변경 (안전한 버전)
   async changePassword(req, res) {
     try {
-      const { userId } = req.user;
+      const userId = req.user.id;
       const { currentPassword, newPassword } = req.body;
       
       if (!currentPassword || !newPassword) {
@@ -362,47 +389,30 @@ class UserController {
     }
   }
 
-  // SSRF 취약점 - 프로필 이미지 URL로 업로드 (취약한 버전)
+  // 프로필 이미지 URL로 업로드 (취약한 버전)
   async unsafeUpdateProfileImage(req, res) {
     try {
-      const { userId } = req.user;
+      const userId = req.user.id;
       const { imageUrl } = req.body;
       
       if (!imageUrl) {
         return res.status(400).json({ message: '이미지 URL이 필요합니다.' });
       }
       
-      console.log(`[USER] User ${userId} requesting image from: ${imageUrl}`);
-      
-      // 취약점 1: URL 검증 없이 직접 요청
-      // 위험한 URL 예시:
-      // - http://admin-api:3001/api/admin/users
-      // - http://monitoring:3002/api/monitoring/metrics
-      // - http://mysql:3306
-      // - file:///etc/passwd
+      // URL 검증 없이 직접 요청
       try {
         const response = await fetch(imageUrl);
         const responseText = await response.text();
         
-        // 취약점 2: Content-Type 검증 없음
-        // JSON 응답도 "이미지"로 처리
-        
-        // 취약점 3: 응답 내용을 그대로 반환
-        // 내부 API 응답이 클라이언트에게 노출됨
         if (!response.ok) {
           return res.status(400).json({ 
             message: '이미지를 가져올 수 없습니다.',
-            error: responseText,
             url: imageUrl,
             status: response.status
           });
         }
         
-        // 취약점 4: 응답 크기 제한 없음
-        // 대용량 파일로 서버 메모리 고갈 가능
-        
-        // 실제로는 이미지를 처리해야 하지만,
-        // 데모를 위해 URL만 저장
+        // 이미지 URL 저장
         await database.update('users', 
           { profile_picture: imageUrl }, 
           { id: userId }
@@ -410,35 +420,19 @@ class UserController {
         
         res.json({ 
           message: '프로필 이미지가 업데이트되었습니다.',
-          imageUrl: imageUrl,
-          // 취약점 5: 내부 API 응답 일부 노출
-          debug_info: {
-            response_status: response.status,
-            response_headers: Object.fromEntries(response.headers.entries()),
-            response_preview: responseText.substring(0, 500) + '...'
-          }
+          imageUrl: imageUrl
         });
         
       } catch (fetchError) {
-        // 취약점 6: 상세한 에러 정보 노출
-        console.error(`[ERROR] Image fetch failed for ${imageUrl}:`, fetchError.message);
         res.status(500).json({ 
           message: '이미지 처리 중 오류가 발생했습니다.',
-          error: fetchError.message,
-          url: imageUrl,
-          // 내부 네트워크 정보 노출
-          system_info: {
-            hostname: require('os').hostname(),
-            network_interfaces: Object.keys(require('os').networkInterfaces())
-          }
+          url: imageUrl
         });
       }
       
     } catch (error) {
-      console.error('Unsafe update profile image error:', error);
       res.status(500).json({ 
-        message: '서버 오류가 발생했습니다.',
-        error: error.message 
+        message: '서버 오류가 발생했습니다.'
       });
     }
   }

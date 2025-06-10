@@ -59,14 +59,6 @@ const Sidebar = () => {
               <i className="bi bi-bookmark nav-icon-menu"></i> {t('nav.saved', '저장됨')}
             </Link>
           </li>
-          <li className="nav-item">
-            <Link 
-              to={currentUser ? `/profile/${currentUser.username}` : '/profile'} 
-              className={`nav-link ${location.pathname.startsWith('/profile') ? 'active' : ''}`}
-            >
-              <i className="bi bi-person nav-icon-menu"></i> {t('nav.profile', '프로필')}
-            </Link>
-          </li>
         </ul>
       </nav>
 

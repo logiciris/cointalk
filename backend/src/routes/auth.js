@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const userController = require('../controllers/userController');
 const { authenticate } = require('../middlewares/auth');
 const config = require('../config/config');
 const database = require('../utils/database');
@@ -14,7 +15,7 @@ const JWT_SECRET = config.jwt.secret;
 
 const loginAttempts = new Map();
 
-// 회원가입
+// 회원가입 - userController 사용
 router.post(
   '/register',
   [
@@ -36,77 +37,7 @@ router.post(
       .isLength({ min: 6 })
       .withMessage('비밀번호는 최소 6자 이상이어야 합니다.')
   ],
-  async (req, res) => {
-    try {
-      // 유효성 검사 오류 확인
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ 
-          success: false,
-          message: '입력값이 유효하지 않습니다.',
-          errors: errors.array() 
-        });
-      }
-      
-      const { username, email, password, phone } = req.body;
-      
-      // 사용자 중복 확인
-      const existingUser = await User.findByEmailOrUsername(email, username);
-      
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: '이미 등록된 이메일 또는 사용자명입니다.'
-        });
-      }
-      
-      // 새 사용자 생성
-      const newUser = await User.create({
-        username,
-        email,
-        password,
-        phone
-      });
-      
-      // JWT 토큰 생성
-      const token = jwt.sign(
-        { 
-          userId: newUser.id,
-          username: newUser.username,
-          role: newUser.role 
-        },
-        JWT_SECRET,
-        { expiresIn: config.jwt.expiresIn }
-      );
-      
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      });
-
-      res.status(201).json({
-        success: true,
-        message: '회원가입이 완료되었습니다.',
-        token,
-        user: newUser.toJSON()
-      });
-    } catch (err) {
-      console.error('회원가입 오류:', err);
-      
-      if (err.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ 
-          success: false,
-          message: '이미 존재하는 사용자입니다.'
-        });
-      }
-      
-      res.status(500).json({ 
-        success: false,
-        message: '서버 오류가 발생했습니다.'
-      });
-    }
-  }
+  userController.register
 );
 
 // 로그인

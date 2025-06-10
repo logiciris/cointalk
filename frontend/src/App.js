@@ -22,11 +22,11 @@ import MessagesPage from './pages/MessagesPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import SecuritySettingsPage from './pages/SecuritySettingsPage';
 import AdminPage from './pages/AdminPage';
 
-// 2차 인증 컴포넌트
-import TwoFactorSettings from './components/auth/TwoFactorSettings';
+import TwoFactorSettingsPage from './pages/TwoFactorSettingsPage';
 
 // 스타일 임포트
 import './styles/App.css';
@@ -60,8 +60,9 @@ function App() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/settings/security" element={<SecuritySettingsPage />} />
-            <Route path="/settings/2fa" element={<TwoFactorSettings />} />
+            <Route path="/settings/2fa" element={<TwoFactorSettingsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </div>

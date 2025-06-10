@@ -7,8 +7,6 @@ const morgan = require('morgan');
 const path = require('path');
 const config = require('./config/config');
 
-const helmet = require('helmet');
-
 // 라우트 임포트
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -32,7 +30,11 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost',
+    'http://localhost:80'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -57,8 +59,6 @@ app.use((req, res, next) => {
   
   next();
 });
-
-app.use(helmet());
 
 // 세션 설정
 app.use(

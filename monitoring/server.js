@@ -47,7 +47,7 @@ app.get('/api/monitoring/logs', (req, res) => {
     { level: 'info', message: 'User login successful', timestamp: new Date() },
     { level: 'warning', message: 'High memory usage detected', timestamp: new Date() },
     { level: 'error', message: 'Database connection timeout', timestamp: new Date() },
-    { level: 'info', message: 'SSRF attempt detected from user input', timestamp: new Date() }
+    { level: 'info', message: 'File upload processed', timestamp: new Date() }
   ];
 
   res.json({

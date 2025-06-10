@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, Button, Container, Card, Alert, Spinner, ProgressBar } from 'react-bootstrap';
 import { register, clearErrors } from '../redux/actions/authActions';
+import TwoFactorSetupModal from '../components/auth/TwoFactorSetupModal';
+import authService from '../services/authService';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +18,8 @@ const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [twoFactorSetupData, setTwoFactorSetupData] = useState(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -147,19 +151,44 @@ const RegisterPage = () => {
     }
 
     try {
-      const result = await dispatch(register({
+      // 직접 authService 사용하여 회원가입 시도
+      const result = await authService.register({
         username,
         email,
         password,
         phone
-      }));
+      });
       
       if (result.success) {
-        navigate('/');
+        if (result.requiresTwoFactor && result.twoFactorCode) {
+          // 2차 인증 설정 모달 표시
+          setTwoFactorSetupData({
+            twoFactorCode: result.twoFactorCode,
+            backupCodes: result.backupCodes || [],
+            user: result.user,
+            message: result.message
+          });
+          setShowTwoFactorSetup(true);
+        } else {
+          // 일반 회원가입 성공 (2차 인증 없음)
+          navigate('/');
+        }
+      } else {
+        // 회원가입 실패
+        alert(result.message || '회원가입에 실패했습니다.');
       }
     } catch (error) {
       console.error('회원가입 오류:', error);
+      alert('서버 오류가 발생했습니다.');
     }
+  };
+
+  // 2차 인증 설정 완료 처리
+  const handleTwoFactorSetupComplete = () => {
+    setShowTwoFactorSetup(false);
+    setTwoFactorSetupData(null);
+    // 로그인 페이지로 이동
+    navigate('/login');
   };
 
   return (
@@ -354,6 +383,18 @@ const RegisterPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* 2차 인증 설정 모달 */}
+      {showTwoFactorSetup && twoFactorSetupData && (
+        <TwoFactorSetupModal
+          show={showTwoFactorSetup}
+          onHide={() => {}} // 모달을 강제로 닫을 수 없도록 함
+          twoFactorCode={twoFactorSetupData.twoFactorCode}
+          backupCodes={twoFactorSetupData.backupCodes}
+          userInfo={twoFactorSetupData.user}
+          onContinue={handleTwoFactorSetupComplete}
+        />
+      )}
     </Container>
   );
 };

@@ -44,12 +44,32 @@ class AuthService {
   // 회원가입
   async register(userData) {
     try {
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/auth/register', {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone
+      });
       
       if (response.data.success) {
-        // 토큰과 사용자 정보 저장
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        // 2차 인증이 필요한 경우
+        if (response.data.requiresTwoFactor && response.data.twoFactorCode) {
+          return {
+            success: true,
+            requiresTwoFactor: true,
+            twoFactorCode: response.data.twoFactorCode,
+            backupCodes: response.data.backupCodes || [],
+            user: response.data.user,
+            message: response.data.message,
+            info: response.data.info
+          };
+        }
+        
+        // 일반 회원가입 성공 (토큰 저장)
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
         
         return {
           success: true,

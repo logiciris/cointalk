@@ -103,11 +103,11 @@ const SecuritySettingsPage = () => {
               <div className="list-group list-group-flush">
                 <Link to="/settings/profile" className="list-group-item list-group-item-action">
                   <FaUser className="me-2" />
-                  프로필 설정
+                  개인정보 설정
                 </Link>
                 <div className="list-group-item list-group-item-action active">
                   <FaLock className="me-2" />
-                  보안 설정
+                  비밀번호 변경
                 </div>
                 <Link to="/settings/2fa" className="list-group-item list-group-item-action">
                   <FaShieldAlt className="me-2" />
@@ -129,7 +129,7 @@ const SecuritySettingsPage = () => {
         <Col md={9}>
           <Card>
             <Card.Header>
-              <h4><FaLock className="me-2" />보안 설정</h4>
+              <h4><FaLock className="me-2" />비밀번호 변경</h4>
             </Card.Header>
             <Card.Body>
               {alert.show && (
@@ -196,47 +196,6 @@ const SecuritySettingsPage = () => {
                       {loading ? '변경 중...' : '비밀번호 변경'}
                     </Button>
                   </Form>
-                </Card.Body>
-              </Card>
-
-              {/* 보안 정보 섹션 */}
-              <Card className="mb-4">
-                <Card.Header>
-                  <h5><FaShieldAlt className="me-2" />보안 정보</h5>
-                </Card.Header>
-                <Card.Body>
-                  <div className="mb-3">
-                    <strong>계정:</strong> {user?.email}
-                  </div>
-                  <div className="mb-3">
-                    <strong>사용자명:</strong> {user?.username}
-                  </div>
-                  <div className="mb-3">
-                    <strong>2차 인증:</strong> 
-                    <span className="badge bg-success ms-2">활성화</span>
-                  </div>
-                  <div className="mb-3">
-                    <strong>마지막 로그인:</strong> 방금 전
-                  </div>
-                  
-                  <hr />
-                  
-                  <div className="d-flex gap-2">
-                    <Button 
-                      as={Link} 
-                      to="/settings/2fa" 
-                      variant="outline-primary" 
-                      size="sm"
-                    >
-                      2차 인증 관리
-                    </Button>
-                    <Button 
-                      variant="outline-secondary" 
-                      size="sm"
-                    >
-                      로그인 기록 보기
-                    </Button>
-                  </div>
                 </Card.Body>
               </Card>
 

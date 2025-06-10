@@ -6,7 +6,7 @@ module.exports = {
   database: {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'cointalk_user',
-    password: process.env.DB_PASSWORD || 'password123',
+    password: process.env.DB_PASSWORD || 'cointalk_password',
     database: process.env.DB_NAME || 'cointalk',
     port: process.env.DB_PORT || 3306
   },

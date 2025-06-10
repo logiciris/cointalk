@@ -17,11 +17,11 @@ const SettingsPage = () => {
               <div className="list-group list-group-flush">
                 <Link to="/settings/profile" className="list-group-item list-group-item-action">
                   <FaUser className="me-2" />
-                  프로필 설정
+                  개인정보 설정
                 </Link>
                 <Link to="/settings/security" className="list-group-item list-group-item-action">
                   <FaLock className="me-2" />
-                  보안 설정
+                  비밀번호 변경
                 </Link>
                 <Link to="/settings/2fa" className="list-group-item list-group-item-action">
                   <FaShieldAlt className="me-2" />
@@ -70,9 +70,9 @@ const SettingsPage = () => {
                     <Card className="h-100">
                       <Card.Body className="text-center">
                         <FaUser size={40} className="text-info mb-3" />
-                        <h6>프로필 설정</h6>
+                        <h6>개인정보 설정</h6>
                         <p className="text-muted small">
-                          프로필 정보를 수정하세요
+                          개인정보를 수정하세요
                         </p>
                         <Button as={Link} to="/settings/profile" variant="outline-primary" size="sm">
                           수정하기
