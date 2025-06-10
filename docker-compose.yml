@@ -45,12 +45,13 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/sample_data_1.sql:/docker-entrypoint-initdb.d/02-sample_data_1.sql
-      - ./database/sample_data_2.sql:/docker-entrypoint-initdb.d/03-sample_data_2.sql
-      - ./database/sample_data_3_a.sql:/docker-entrypoint-initdb.d/04-sample_data_3_a.sql
-      - ./database/sample_data_3_b.sql:/docker-entrypoint-initdb.d/05-sample_data_3_b.sql
-      - ./database/sample_data_3_c.sql:/docker-entrypoint-initdb.d/06-sample_data_3_c.sql
-      - ./database/sample_data_3_d.sql:/docker-entrypoint-initdb.d/07-sample_data_3_d.sql
+      - ./database/2fa_schema.sql:/docker-entrypoint-initdb.d/02-2fa_schema.sql
+      - ./database/sample_data_1.sql:/docker-entrypoint-initdb.d/03-sample_data_1.sql
+      - ./database/sample_data_2.sql:/docker-entrypoint-initdb.d/04-sample_data_2.sql
+      - ./database/sample_data_3_a.sql:/docker-entrypoint-initdb.d/05-sample_data_3_a.sql
+      - ./database/sample_data_3_b.sql:/docker-entrypoint-initdb.d/06-sample_data_3_b.sql
+      - ./database/sample_data_3_c.sql:/docker-entrypoint-initdb.d/07-sample_data_3_c.sql
+      - ./database/sample_data_3_d.sql:/docker-entrypoint-initdb.d/08-sample_data_3_d.sql
       - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
