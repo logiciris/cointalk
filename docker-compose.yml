@@ -36,6 +36,12 @@ services:
       - JWT_SECRET=your_jwt_secret
     networks:
       - cointalk-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/debug"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # MySQL 서비스
   mysql:
@@ -60,6 +66,12 @@ services:
       - MYSQL_PASSWORD=password123
     networks:
       - cointalk-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Redis 서비스
   redis:
