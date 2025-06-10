@@ -1,10 +1,11 @@
 @echo off
+chcp 65001 >nul
 echo 🚀 CoinTalk 설치 스크립트 시작...
 
 REM Docker 설치 확인
 docker --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ❌ Docker가 설치되지 않았습니다. Docker Desktop을 설치해주세요.
+if NOT %errorlevel%==0 (
+    echo ❌ Docker가 설치되지 않았습니다. 
     echo 📥 다운로드: https://www.docker.com/products/docker-desktop
     pause
     exit /b 1
@@ -12,7 +13,7 @@ if %errorlevel% neq 0 (
 
 REM Docker 실행 확인
 docker info >nul 2>&1
-if %errorlevel% neq 0 (
+if NOT %errorlevel%==0 (
     echo ❌ Docker가 실행되지 않고 있습니다. Docker Desktop을 시작해주세요.
     pause
     exit /b 1
@@ -42,15 +43,15 @@ echo ⏳ 서비스 초기화 대기 중... (최대 3분)
 
 REM MySQL 초기화 대기
 echo 🗄️ MySQL 초기화 대기 중...
-timeout /t 30 /nobreak >nul
+ping 127.0.0.1 -n 31 >nul
 
 REM 백엔드 시작 대기
 echo 🔧 백엔드 서비스 시작 대기 중...
-timeout /t 20 /nobreak >nul
+ping 127.0.0.1 -n 21 >nul
 
 REM 프론트엔드 시작 대기
 echo 🎨 프론트엔드 서비스 시작 대기 중...
-timeout /t 20 /nobreak >nul
+ping 127.0.0.1 -n 21 >nul
 
 echo.
 echo 📊 서비스 상태 확인:
