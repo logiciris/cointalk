@@ -31,7 +31,12 @@ const PostsPage = () => {
       }
       
       if (result.success) {
-        setPosts(result.data.posts || []);
+        // 게시물 목록의 like_count를 likes로 매핑
+        const postsWithLikes = (result.data.posts || []).map(post => ({
+          ...post,
+          likes: post.like_count || 0
+        }));
+        setPosts(postsWithLikes);
         setTotalPages(result.data.pagination?.pages || 1);
       } else {
         setError(result.message);
@@ -70,7 +75,12 @@ const PostsPage = () => {
         setPosts(prevPosts => 
           prevPosts.map(post => 
             post.id === postId 
-              ? { ...post, likes: result.data.likeCount, isLiked: result.data.isLiked }
+              ? { 
+                  ...post, 
+                  likes: result.data.likeCount, 
+                  like_count: result.data.likeCount,
+                  isLiked: result.data.isLiked 
+                }
               : post
           )
         );

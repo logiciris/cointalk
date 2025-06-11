@@ -1,12 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Card, Row, Col, Button, Tab, Nav } from 'react-bootstrap';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const CoinPage = () => {
   const { symbol } = useParams();
   const [coin, setCoin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [chartPeriod, setChartPeriod] = useState('7d');
+
+  // 차트 데이터 생성 함수
+  const generateChartData = (period) => {
+    const basePrice = 58432.21;
+    const days = period === '1d' ? 24 : period === '7d' ? 7 : period === '1m' ? 30 : 365;
+    const interval = period === '1d' ? 'hour' : 'day';
+    
+    return Array.from({ length: days }, (_, i) => {
+      const date = new Date();
+      if (period === '1d') {
+        date.setHours(date.getHours() - (days - 1 - i));
+      } else {
+        date.setDate(date.getDate() - (days - 1 - i));
+      }
+      
+      const randomChange = (Math.random() - 0.5) * 0.1;
+      const price = basePrice * (1 + randomChange * (i + 1) / days);
+      const volume = Math.random() * 2000000000 + 1000000000;
+      
+      return {
+        date: period === '1d' ? date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString('ko-KR'),
+        price: Math.round(price * 100) / 100,
+        volume: Math.round(volume),
+        timestamp: date.getTime()
+      };
+    });
+  };
 
   useEffect(() => {
     // 실제로는 API에서 코인 정보를 가져오는 로직이 들어갈 예정
@@ -44,12 +73,24 @@ const CoinPage = () => {
           comments: 22
         }
       ],
-      followers: 1243
+      followers: 1243,
+      chartData: generateChartData('7d')
     };
     
     setCoin(mockCoin);
     setLoading(false);
   }, [symbol]);
+
+  // 차트 기간 변경 시 데이터 업데이트
+  const handlePeriodChange = (period) => {
+    setChartPeriod(period);
+    if (coin) {
+      setCoin({
+        ...coin,
+        chartData: generateChartData(period)
+      });
+    }
+  };
 
   if (loading) {
     return <Container className="mt-5"><p>로딩 중...</p></Container>;
@@ -79,10 +120,14 @@ const CoinPage = () => {
             </Col>
             <Col md={4} className="text-end">
               <h3 className="mb-0">${coin.priceData.current.toLocaleString()}</h3>
-              <div className={`mb-2 ${coin.priceData.change24h >= 0 ? 'text-success' : 'text-danger'}`}>
+              <div className="mb-2 ${coin.priceData.change24h >= 0 ? 'text-success' : 'text-danger'}`">
                 {coin.priceData.change24h >= 0 ? '+' : ''}{coin.priceData.change24h}%
               </div>
-              <Button variant="outline-primary">팔로우 ({coin.followers})</Button>
+              <div className="d-flex gap-2">
+                <Button variant="outline-primary">팔로우 ({coin.followers})</Button>
+                <Button variant="success" href={`/trade/${coin.symbol}`}>거래하기</Button>
+                <Button variant="info" href={`/coin/${coin.symbol}/chat`}>채팅방</Button>
+              </div>
             </Col>
           </Row>
         </Card.Body>
@@ -94,6 +139,9 @@ const CoinPage = () => {
             <Nav variant="tabs">
               <Nav.Item>
                 <Nav.Link eventKey="overview">개요</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="chart">차트</Nav.Link>
               </Nav.Item>
               <Nav.Item>
                 <Nav.Link eventKey="market">시장 정보</Nav.Link>
@@ -108,6 +156,83 @@ const CoinPage = () => {
               <Tab.Pane eventKey="overview">
                 <h4>코인 소개</h4>
                 <p>{coin.description}</p>
+              </Tab.Pane>
+              
+              <Tab.Pane eventKey="chart">
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h4>가격 차트</h4>
+                    <div className="btn-group" role="group">
+                      {['1d', '7d', '1m', '1y'].map(period => (
+                        <button
+                          key={period}
+                          type="button"
+                          className={`btn btn-sm ${chartPeriod === period ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => handlePeriodChange(period)}
+                        >
+                          {period === '1d' ? '1일' : period === '7d' ? '7일' : period === '1m' ? '1개월' : '1년'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <Card className="mb-4">
+                    <Card.Body>
+                      <h5 className="mb-3">가격 추이</h5>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart data={coin.chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            interval="preserveStartEnd"
+                          />
+                          <YAxis 
+                            domain={['dataMin - 1000', 'dataMax + 1000']}
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `$${value.toLocaleString()}`}
+                          />
+                          <Tooltip 
+                            formatter={(value) => [`$${value.toLocaleString()}`, '가격']}
+                            labelFormatter={(label) => `시간: ${label}`}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="price" 
+                            stroke="#007bff" 
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </Card.Body>
+                  </Card>
+
+                  <Card>
+                    <Card.Body>
+                      <h5 className="mb-3">거래량</h5>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={coin.chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            interval="preserveStartEnd"
+                          />
+                          <YAxis 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                          />
+                          <Tooltip 
+                            formatter={(value) => [`$${(value / 1000000).toFixed(2)}M`, '거래량']}
+                            labelFormatter={(label) => `시간: ${label}`}
+                          />
+                          <Bar dataKey="volume" fill="#28a745" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Card.Body>
+                  </Card>
+                </div>
               </Tab.Pane>
               <Tab.Pane eventKey="market">
                 <Row>

@@ -15,13 +15,19 @@ class FileController {
                     message: '업로드할 파일이 없습니다.'
                 });
             }
+
+            // postId 유효성 검사
+            let validPostId = null;
+            if (postId && postId !== 'undefined' && !isNaN(parseInt(postId))) {
+                validPostId = parseInt(postId);
+            }
             
             const uploadedFiles = [];
             
             for (const file of files) {
                 // 파일 정보를 데이터베이스에 저장
                 const fileData = {
-                    post_id: postId || null,
+                    post_id: validPostId,
                     original_name: file.originalname,
                     stored_name: file.filename,
                     file_path: file.path,
@@ -55,40 +61,63 @@ class FileController {
         }
     }
     
-    // 파일 다운로드 (취약한 구현)
+    // 파일 다운로드
     async downloadFile(req, res) {
         try {
             const { filename } = req.params;
             
-            // 취약점: 경로 순회 공격 가능
-            const filePath = path.join(__dirname, '../../uploads', filename);
+            // 파일명 유효성 검사 (경로 순회 공격 방지)
+            if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+                return res.status(400).json({
+                    success: false,
+                    message: '유효하지 않은 파일명입니다.'
+                });
+            }
             
-            // 파일 존재 확인
-            if (!fs.existsSync(filePath)) {
+            // 데이터베이스에서 파일 정보 확인
+            const fileInfo = await database.query(
+                'SELECT * FROM post_files WHERE stored_name = ?',
+                [filename]
+            );
+            
+            if (!fileInfo || fileInfo.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: '파일을 찾을 수 없습니다.'
                 });
             }
             
+            const file = fileInfo[0];
+            const filePath = file.file_path;
+            
+            // 파일 존재 확인
+            if (!fs.existsSync(filePath)) {
+                return res.status(404).json({
+                    success: false,
+                    message: '파일이 서버에 존재하지 않습니다.'
+                });
+            }
+            
             try {
                 // 다운로드 수 증가
                 await database.query(
-                    'UPDATE post_files SET downloads = downloads + 1 WHERE stored_name = ?',
-                    [filename]
+                    'UPDATE post_files SET downloads = COALESCE(downloads, 0) + 1 WHERE id = ?',
+                    [file.id]
                 );
             } catch (dbError) {
                 console.log('Download count update failed:', dbError.message);
             }
             
             // 파일 전송
-            res.download(filePath, filename, (err) => {
+            res.download(filePath, file.original_name, (err) => {
                 if (err) {
                     console.error('File download error:', err);
-                    res.status(500).json({
-                        success: false,
-                        message: '파일 다운로드 중 오류가 발생했습니다.'
-                    });
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            success: false,
+                            message: '파일 다운로드 중 오류가 발생했습니다.'
+                        });
+                    }
                 }
             });
             

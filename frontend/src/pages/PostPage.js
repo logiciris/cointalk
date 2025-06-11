@@ -62,8 +62,14 @@ const PostPage = () => {
       const result = await postService.getPost(postId);
       
       if (result.success) {
-        setPost(result.data);
-        setComments(result.data.comments || []);
+        const postData = result.data;
+        // like_count를 likes로 매핑
+        postData.likes = postData.like_count || 0;
+        
+        setPost(postData);
+        
+        // 댓글은 별도 API로 조회
+        await fetchComments(postId);
         
         // 첨부파일 조회
         fetchAttachedFiles(postId);
@@ -75,6 +81,26 @@ const PostPage = () => {
       setError('게시물을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 댓글 목록 조회 함수 추가
+  const fetchComments = async (postId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/comments/post/${postId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        // API 응답 구조에 맞게 수정: data.comments
+        setComments(result.data?.comments || []);
+        console.log('댓글 로드 완료:', result.data?.comments?.length || 0, '개');
+      } else {
+        console.error('댓글 조회 실패:', result.message);
+        setComments([]);
+      }
+    } catch (error) {
+      console.error('댓글 조회 오류:', error);
+      setComments([]);
     }
   };
 
@@ -91,11 +117,20 @@ const PostPage = () => {
       setLikeLoading(true);
       const result = await likeService.togglePostLike(post.id);
       if (result.success) {
+        // likeService가 response.data를 data로 래핑하므로 result.data가 실제 API 응답
+        const apiResponse = result.data;
+        console.log('API 응답 구조:', apiResponse);
+        
         setPost(prevPost => ({
           ...prevPost,
-          likes: result.data.likeCount,
-          isLiked: result.data.isLiked
+          likes: parseInt(apiResponse.likeCount) || 0,
+          isLiked: apiResponse.isLiked,
+          like_count: parseInt(apiResponse.likeCount) || 0  // 백엔드 필드와 동기화
         }));
+        console.log('좋아요 상태 업데이트:', {
+          likes: apiResponse.likeCount,
+          isLiked: apiResponse.isLiked
+        });
       } else {
         alert(result.message);
       }

@@ -55,6 +55,11 @@ const Sidebar = () => {
             </Link>
           </li>
           <li className="nav-item">
+            <Link to="/portfolio" className={`nav-link ${location.pathname === '/portfolio' ? 'active' : ''}`}>
+              <i className="bi bi-pie-chart nav-icon-menu"></i> {t('nav.portfolio', '포트폴리오')}
+            </Link>
+          </li>
+          <li className="nav-item">
             <Link to="/saved" className={`nav-link ${location.pathname === '/saved' ? 'active' : ''}`}>
               <i className="bi bi-bookmark nav-icon-menu"></i> {t('nav.saved', '저장됨')}
             </Link>

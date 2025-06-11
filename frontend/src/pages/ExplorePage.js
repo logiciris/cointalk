@@ -138,7 +138,12 @@ const ExplorePage = () => {
       console.log('검색 결과:', result);
       
       if (result.success) {
-        setSearchResults(result.data.posts || []);
+        // 검색 결과의 like_count를 likes로 매핑
+        const postsWithLikes = (result.data.posts || []).map(post => ({
+          ...post,
+          likes: post.like_count || 0
+        }));
+        setSearchResults(postsWithLikes);
         setActiveTab('search');
       } else {
         console.error('검색 실패:', result.message);
@@ -167,6 +172,12 @@ const ExplorePage = () => {
         
         if (result.success) {
           let sortedResults = [...result.data.posts];
+          
+          // like_count를 likes로 매핑
+          sortedResults = sortedResults.map(post => ({
+            ...post,
+            likes: post.like_count || 0
+          }));
           
           // 클라이언트 사이드에서 정렬 (백엔드에서 정렬을 지원하지 않으므로)
           switch (newSort) {

@@ -17,14 +17,13 @@ router.get('/user/:username', postController.getPostsByUser);
 router.post('/:postId/like', auth.authenticate, likeController.togglePostLike);
 router.get('/:postId/like-status', auth.optionalAuth, likeController.getPostLikeStatus);
 
-// 게시물 관련 라우트
-router.get('/:id', postController.unsafeGetPost);
+// 게시물 관련 라우트 (안전한 버전을 기본으로 변경)
+router.get('/:id', auth.optionalAuth, postController.getPost);
 router.post('/', auth.authenticate, postController.createPost);
 router.put('/:id', auth.authenticate, postController.unsafeUpdatePost);
 router.delete('/:id', auth.authenticate, postController.unsafeDeletePost);
 
-// 안전한 버전은 /safe 경로로 숨김 (관리자용)
-router.get('/safe', postController.getPosts);
-router.get('/safe/:id', postController.getPost);
+// 취약한 버전은 /unsafe 경로로 이동 (학습용)
+router.get('/unsafe/:id', postController.unsafeGetPost);
 
 module.exports = router;

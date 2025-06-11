@@ -434,15 +434,37 @@ class PostController {
   async getPost(req, res) {
     try {
       const { id } = req.params;
+      const userId = req.user?.id; // 인증된 사용자 ID (선택적)
 
-      const posts = await database.query(`
-        SELECT p.*, u.username, u.profile_picture,
-               (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
-               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) as comment_count
-        FROM posts p 
-        JOIN users u ON p.user_id = u.id 
-        WHERE p.id = ? AND p.is_deleted = 0
-      `, [id]);
+      console.log('getPost called with:', { id, userId }); // 디버그 로그
+
+      let query, params;
+      
+      if (userId) {
+        query = `
+          SELECT p.*, u.username, u.profile_picture,
+                 (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
+                 (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) as comment_count,
+                 (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = ? AND pl.user_id = ?) as is_liked_by_user
+          FROM posts p 
+          JOIN users u ON p.user_id = u.id 
+          WHERE p.id = ? AND p.is_deleted = 0
+        `;
+        params = [id, userId, id]; // 쿼리 순서에 맞게 파라미터 설정
+      } else {
+        query = `
+          SELECT p.*, u.username, u.profile_picture,
+                 (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
+                 (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.is_deleted = 0) as comment_count,
+                 0 as is_liked_by_user
+          FROM posts p 
+          JOIN users u ON p.user_id = u.id 
+          WHERE p.id = ? AND p.is_deleted = 0
+        `;
+        params = [id];
+      }
+
+      const posts = await database.query(query, params);
 
       if (!posts || posts.length === 0) {
         return res.status(404).json({
@@ -454,9 +476,24 @@ class PostController {
       // 조회수 증가
       await database.query('UPDATE posts SET views = views + 1 WHERE id = ?', [id]);
 
+      const post = posts[0];
+      console.log('Post before processing:', { 
+        like_count: post.like_count, 
+        is_liked_by_user: post.is_liked_by_user 
+      }); // 디버그 로그
+
+      // is_liked_by_user를 boolean으로 변환
+      post.isLiked = parseInt(post.is_liked_by_user) > 0;
+      delete post.is_liked_by_user; // 불필요한 필드 제거
+
+      console.log('Post after processing:', { 
+        like_count: post.like_count, 
+        isLiked: post.isLiked 
+      }); // 디버그 로그
+
       res.json({
         success: true,
-        post: posts[0]
+        post: post
       });
     } catch (error) {
       console.error('Get post error:', error);

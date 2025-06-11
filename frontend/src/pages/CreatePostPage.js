@@ -26,56 +26,111 @@ const CreatePostPage = () => {
   const location = useLocation();
   const { isAuthenticated, user } = useSelector(state => state.auth);
   
-  // URL 파라미터에서 편집 모드인지 확인
+  // 편집 모드 초기화 및 데이터 로드 (통합된 useEffect)
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const editMode = params.get('edit') === 'true';
-    const id = params.get('id');
-    
-    if (editMode && id) {
+    const initializeEditMode = async () => {
+      // 1. URL 파라미터 확인
+      const params = new URLSearchParams(location.search);
+      const editMode = params.get('edit') === 'true';
+      const id = params.get('id');
+      
+      if (!editMode || !id) {
+        // 일반 작성 모드일 때는 토큰만 설정
+        const savedToken = localStorage.getItem('token');
+        if (savedToken) {
+          setToken(savedToken);
+        } else {
+          await loginWithTestAccount();
+        }
+        return;
+      }
+      
+      // 2. 토큰 확인/설정
+      let currentToken = localStorage.getItem('token');
+      if (!currentToken) {
+        await loginWithTestAccount();
+        currentToken = localStorage.getItem('token');
+      }
+      
+      if (!currentToken) {
+        setError('인증 토큰을 가져올 수 없습니다.');
+        return;
+      }
+      
+      // 3. 상태 업데이트
       setIsEditMode(true);
       setPostId(id);
-      // 게시물 데이터 불러오기
-      fetchPost(id);
-    }
-  }, [location.search]);
+      setToken(currentToken);
+      
+      // 4. 게시물 데이터 로드
+      await fetchPost(id, currentToken);
+    };
+    
+    initializeEditMode();
+  }, [location.search]); // 단일 의존성
   
-  // 컴포넌트 로드 시 현재 토큰 가져오기
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-    } else {
-      // 토큰이 없으면 로그인 시도
-      loginWithTestAccount();
-    }
-  }, []);
-  
-  // 게시물 데이터 불러오기
-  const fetchPost = async (id) => {
+  // 게시물 데이터 불러오기 (수정된 함수)
+  const fetchPost = async (id, authToken = null) => {
     try {
+      const currentToken = authToken || token || localStorage.getItem('token');
+      
+      if (!currentToken) {
+        setError('인증 토큰이 없습니다.');
+        return;
+      }
+      
       const response = await axios.get(`http://localhost:5000/api/posts/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${currentToken}`
         }
       });
       
-      if (response.data) {
+      // 올바른 데이터 접근 경로로 수정
+      if (response.data.success && response.data.post) {
+        const post = response.data.post;
+        
         // 폼 데이터 업데이트
         setFormData({
-          title: response.data.title || '',
-          content: response.data.content || '',
-          tags: response.data.tags ? response.data.tags.map(tag => tag.name || tag).join(', ') : '',
-          coins: response.data.coins ? response.data.coins.map(coin => coin.symbol || coin).join(', ') : ''
+          title: post.title || '',
+          content: post.content || '',
+          tags: post.tags ? post.tags.map(tag => tag.name || tag).join(', ') : '',
+          coins: post.coins ? post.coins.map(coin => coin.symbol || coin).join(', ') : ''
         });
+        
+        // 기존 첨부파일 조회
+        fetchExistingFiles(id);
+        
+        console.log('게시물 데이터 로드 완료:', post.title);
+      } else {
+        setError('게시물 데이터를 찾을 수 없습니다.');
       }
     } catch (error) {
       console.error('게시물 불러오기 오류:', error);
-      setError('게시물을 불러올 수 없습니다.');
+      if (error.response?.status === 401) {
+        setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+      } else if (error.response?.status === 404) {
+        setError('존재하지 않는 게시물입니다.');
+      } else {
+        setError('게시물을 불러오는 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  // 기존 첨부파일 조회
+  const fetchExistingFiles = async (postId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/files/post/${postId}`);
+      const result = await response.json();
+      
+      if (result.success && result.files) {
+        setUploadedFiles(result.files);
+      }
+    } catch (error) {
+      console.error('기존 파일 조회 오류:', error);
     }
   };
   
-  // 테스트 계정으로 로그인
+  // 테스트 계정으로 로그인 (개선된 함수)
   const loginWithTestAccount = async () => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', {
@@ -87,16 +142,23 @@ const CreatePostPage = () => {
         const newToken = response.data.token;
         localStorage.setItem('token', newToken);
         setToken(newToken);
-        console.log('로그인 성공:', response.data);
+        console.log('자동 로그인 성공');
+        return newToken;
+      } else {
+        throw new Error('로그인 응답이 실패했습니다.');
       }
     } catch (error) {
       console.error('로그인 오류:', error);
-      setError('로그인에 실패하여 게시물 작성이 불가능합니다.');
+      setError('자동 로그인에 실패했습니다. 수동으로 로그인해주세요.');
+      return null;
     }
   }
 
   // 로그인하지 않은 사용자는 접근 불가
-  if (!isAuthenticated) {
+  const currentUser = user || JSON.parse(localStorage.getItem('user') || '{}');
+  const userAuthenticated = isAuthenticated || !!localStorage.getItem('token');
+  
+  if (!userAuthenticated) {
     return (
       <Container className="mt-4">
         <Alert variant="warning">
@@ -128,8 +190,13 @@ const CreatePostPage = () => {
   const uploadFiles = async (postId) => {
     if (selectedFiles.length === 0) return [];
 
+    // postId가 유효한지 확인
+    if (!postId || postId === 'undefined' || postId === undefined) {
+      throw new Error('유효하지 않은 게시물 ID입니다.');
+    }
+
     const formData = new FormData();
-    formData.append('postId', postId);
+    formData.append('postId', String(postId));
     
     selectedFiles.forEach((file) => {
       formData.append('files', file);
@@ -156,6 +223,30 @@ const CreatePostPage = () => {
     } catch (error) {
       console.error('파일 업로드 오류:', error);
       throw error;
+    }
+  };
+
+  // 기존 파일 삭제 함수
+  const handleFileDelete = async (fileId) => {
+    if (!window.confirm('이 파일을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:5000/api/files/${fileId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+      } else {
+        setError('파일 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('파일 삭제 오류:', error);
+      setError('파일 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -223,23 +314,30 @@ const CreatePostPage = () => {
       console.log('게시물 작성 응답:', response.data);
 
       if (response.data.success) {
+        const newPostId = response.data.postId || response.data.post?.id || response.data.id;
+        
+        console.log('게시물 ID 추출:', newPostId, '응답 데이터:', response.data);
+        
         // 파일 업로드 (게시물 작성 성공 후)
-        if (selectedFiles.length > 0) {
+        if (selectedFiles.length > 0 && newPostId) {
           try {
-            const postId = response.data.post?.id || response.data.id;
-            await uploadFiles(postId);
+            console.log('파일 업로드 시작:', selectedFiles.length, '개 파일');
+            const uploadResult = await uploadFiles(newPostId);
+            console.log('파일 업로드 완료:', uploadResult);
           } catch (uploadError) {
             console.error('파일 업로드 실패:', uploadError);
             // 파일 업로드 실패해도 게시물은 이미 생성되었으므로 성공 처리
+            setError('게시물은 작성되었지만 파일 업로드에 실패했습니다.');
           }
+        } else if (selectedFiles.length > 0) {
+          console.error('게시물 ID가 없어서 파일 업로드를 건너뜁니다.');
+          setError('게시물은 작성되었지만 파일 업로드에 실패했습니다.');
         }
         
         setSuccess(isEditMode ? '게시물이 성공적으로 수정되었습니다!' : '게시물이 성공적으로 작성되었습니다!');
         
-        // 3초 후 게시물 목록으로 이동
-        setTimeout(() => {
-          navigate('/posts');
-        }, 3000);
+        // 즉시 게시물 목록으로 이동
+        navigate('/posts');
       } else {
         setError(response.data.message || '게시물 작성에 실패했습니다.');
       }
@@ -281,8 +379,6 @@ const CreatePostPage = () => {
           {success && (
             <Alert variant="success">
               {success}
-              <br />
-              <small>잠시 후 게시물 목록으로 이동합니다...</small>
             </Alert>
           )}
 
@@ -403,8 +499,25 @@ const CreatePostPage = () => {
               
               {uploadedFiles.length > 0 && (
                 <div className="mt-2">
-                  <Alert variant="success">
-                    ✅ {uploadedFiles.length}개 파일이 성공적으로 업로드되었습니다!
+                  <Alert variant="info">
+                    <strong>기존 첨부파일:</strong>
+                    <ul className="list-unstyled mt-2 mb-0">
+                      {uploadedFiles.map((file, index) => (
+                        <li key={file.id || index} className="d-flex align-items-center justify-content-between mb-1">
+                          <span className="small">
+                            📎 {file.original_name} ({(file.file_size / 1024).toFixed(1)} KB)
+                          </span>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={() => handleFileDelete(file.id)}
+                            disabled={loading}
+                          >
+                            삭제
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
                   </Alert>
                 </div>
               )}
