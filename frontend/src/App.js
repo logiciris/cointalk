@@ -19,9 +19,10 @@ import CreatePostPage from './pages/CreatePostPage';
 import ExplorePage from './pages/ExplorePage';
 // import CoinPage from './pages/CoinPage';
 import CoinsListPage from './pages/CoinsListPage';
+import CoinActionPage from './pages/CoinActionPage';
 import TradePage from './pages/TradePage';
 // import CoinChatPage from './pages/CoinChatPage';
-// import PortfolioPage from './pages/PortfolioPage';
+import PortfolioPage from './pages/PortfolioPage';
 import MessagesPage from './pages/MessagesPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SearchPage from './pages/SearchPage';
@@ -60,10 +61,11 @@ function App() {
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/coins" element={<CoinsListPage />} />
+            <Route path="/coin/:symbol/action" element={<CoinActionPage />} />
             {/* <Route path="/coin/:symbol" element={<CoinPage />} /> */}
             <Route path="/trade/:symbol" element={<TradePage />} />
             {/* <Route path="/coin/:symbol/chat" element={<CoinChatPage />} /> */}
-            {/* <Route path="/portfolio" element={<PortfolioPage />} /> */}
+            <Route path="/portfolio" element={<PortfolioPage />} />}
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/search" element={<SearchPage />} />

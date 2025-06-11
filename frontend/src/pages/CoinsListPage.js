@@ -193,11 +193,11 @@ const CoinsListPage = () => {
                     <div className="d-flex gap-1 justify-content-center">
                       <Button 
                         as={Link} 
-                        to={`/coin/${coin.symbol}`} 
-                        variant="outline-primary" 
+                        to={`/coin/${coin.symbol}/action`} 
+                        variant="primary" 
                         size="sm"
                       >
-                        보기
+                        상세 보기
                       </Button>
                       <Button 
                         as={Link} 
