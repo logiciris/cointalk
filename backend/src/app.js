@@ -23,6 +23,7 @@ const i18nRoutes = require('./routes/i18n');
 const adminRoutes = require('./routes/admin');
 const settingsRoutes = require('./routes/settings');
 const recursiveRoutes = require('./routes/recursive');
+const testVulnRoutes = require('./routes/test-vuln');
 
 // 미들웨어 임포트
 const { authenticate, optionalAuth } = require('./middlewares/auth');
@@ -109,6 +110,7 @@ app.use('/api/admin', adminRoutes);
 
 app.use('/api/settings', settingsRoutes);
 app.use('/api/recursive', recursiveRoutes);
+app.use('/api/test-vuln', testVulnRoutes);
 
 // 정적 파일 서빙
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
