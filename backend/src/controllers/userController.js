@@ -192,6 +192,12 @@ class UserController {
       
       const userId = result.insertId;
       
+      // 새 사용자에게 기본 지갑 생성 (1억원 = 100,000,000원)
+      await database.insert('user_wallets', {
+        user_id: userId,
+        balance: 100000000.00  // 1억원 지급
+      });
+      
       // 🚨 2차 인증 코드 생성 (6자리 랜덤 숫자)
       const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
       

@@ -10,6 +10,8 @@ const CoinActionPage = () => {
   
   // 상태 관리
   const [coinData, setCoinData] = useState(null);
+  const [realTimePrice, setRealTimePrice] = useState(null);
+  const [exchangeRate, setExchangeRate] = useState(1320);
   const [loading, setLoading] = useState(true);
   const [tradeForm, setTradeForm] = useState({
     type: 'buy',
@@ -22,56 +24,53 @@ const CoinActionPage = () => {
     direction: 'above'
   });
 
-  // 모의 코인 데이터
-  const mockCoinData = {
+  // 코인 기본 정보
+  const coinInfo = {
     BTC: {
       symbol: 'BTC',
       name: 'Bitcoin',
-      price: 67234.50,
-      change24h: 2.34,
-      volume24h: 28500000000,
-      marketCap: 1320000000000,
-      high24h: 68500.00,
-      low24h: 65800.00,
-      rsi: 58.2,
-      support: 65000,
-      resistance: 70000
+      volume24h: 32500000000,
+      marketCap: 2170000000000,
+      rsi: 62.5,
+      support: 105000,
+      resistance: 115000
     },
     ETH: {
       symbol: 'ETH',
       name: 'Ethereum',
-      price: 3456.78,
-      change24h: -1.23,
-      volume24h: 15200000000,
-      marketCap: 415000000000,
-      high24h: 3520.00,
-      low24h: 3398.00,
-      rsi: 45.7,
-      support: 3300,
-      resistance: 3600
+      volume24h: 18200000000,
+      marketCap: 455000000000,
+      rsi: 58.3,
+      support: 3600,
+      resistance: 4000
     },
     ADA: {
       symbol: 'ADA',
       name: 'Cardano',
-      price: 0.4567,
-      change24h: 5.67,
+      volume24h: 850000000,
+      marketCap: 14000000000,
+      rsi: 43.2,
+      support: 0.38,
+      resistance: 0.45
+    },
+    DOGE: {
+      symbol: 'DOGE',
+      name: 'Dogecoin',
       volume24h: 1200000000,
-      marketCap: 16000000000,
-      high24h: 0.4650,
-      low24h: 0.4320,
-      rsi: 65.3,
-      support: 0.42,
-      resistance: 0.48
+      marketCap: 10000000000,
+      rsi: 55.8,
+      support: 0.06,
+      resistance: 0.08
     }
   };
 
   useEffect(() => {
     loadCoinData();
     
-    // 5초마다 가격 업데이트 (실시간 시뮬레이션)
+    // 30초마다 실시간 가격 업데이트
     const interval = setInterval(() => {
-      updatePrice();
-    }, 5000);
+      loadRealTimePrice();
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [symbol]);
@@ -79,28 +78,29 @@ const CoinActionPage = () => {
   const loadCoinData = () => {
     setLoading(true);
     
-    // 실제로는 API 호출
-    setTimeout(() => {
-      const data = mockCoinData[symbol?.toUpperCase()];
-      if (data) {
-        setCoinData(data);
-      }
+    const data = coinInfo[symbol?.toUpperCase()];
+    if (data) {
+      setCoinData(data);
+      loadRealTimePrice();
+    } else {
       setLoading(false);
-    }, 500);
+    }
   };
 
-  const updatePrice = () => {
-    if (!coinData) return;
-    
-    // 가격 변동 시뮬레이션 (±2% 랜덤)
-    const variation = (Math.random() - 0.5) * 0.04; // -2% ~ +2%
-    const newPrice = coinData.price * (1 + variation);
-    
-    setCoinData(prev => ({
-      ...prev,
-      price: newPrice,
-      change24h: prev.change24h + (variation * 100)
-    }));
+  const loadRealTimePrice = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/prices/realtime/${symbol}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setRealTimePrice(result.data.price);
+        setExchangeRate(result.data.exchangeRate);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('실시간 가격 로드 오류:', error);
+      setLoading(false);
+    }
   };
 
   const handleTradeSubmit = async (e) => {
@@ -121,7 +121,7 @@ const CoinActionPage = () => {
       return;
     }
 
-    const tradingPrice = tradeForm.orderType === 'market' ? coinData.price : parseFloat(tradeForm.price);
+    const tradingPrice = tradeForm.orderType === 'market' ? realTimePrice : parseFloat(tradeForm.price);
     const amount = parseFloat(tradeForm.amount);
     const totalValue = tradingPrice * amount;
 
@@ -156,11 +156,18 @@ const CoinActionPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        alert(`${tradeForm.type === 'buy' ? '매수' : '매도'} 주문이 성공적으로 처리되었습니다!\n` +
-              `총 ${tradeForm.type === 'buy' ? '지불' : '수령'} 금액: $${result.data[tradeForm.type === 'buy' ? 'totalWithFee' : 'netRevenue'].toLocaleString()}`);
+        const successMessage = `${tradeForm.type === 'buy' ? '매수' : '매도'} 주문이 성공적으로 처리되었습니다!\n` +
+              `총 ${tradeForm.type === 'buy' ? '지불' : '수령'} 금액: $${result.data[tradeForm.type === 'buy' ? 'totalWithFee' : 'netRevenue'].toLocaleString()}`;
+        
+        alert(successMessage);
         
         // 폼 초기화
         setTradeForm(prev => ({ ...prev, amount: '', price: '' }));
+        
+        // 포트폴리오 페이지로 이동하여 결과 확인
+        if (window.confirm('포트폴리오에서 거래 결과를 확인하시겠습니까?')) {
+          navigate('/portfolio');
+        }
       } else {
         alert(`거래 실패: ${result.message}`);
       }
@@ -203,7 +210,7 @@ const CoinActionPage = () => {
     return price?.toFixed(4);
   };
 
-  if (loading) {
+  if (loading || !coinData || !realTimePrice) {
     return (
       <Container className="mt-4">
         {/* 스켈레톤 헤더 */}

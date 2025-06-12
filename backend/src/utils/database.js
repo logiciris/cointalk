@@ -18,7 +18,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   timezone: '+00:00',
   supportBigNumbers: true,
-  bigNumberStrings: true,
+  bigNumberStrings: false,  // DECIMAL을 숫자로 반환하도록 변경
   dateStrings: false,
   debug: false,
   sql_mode: 'TRADITIONAL',

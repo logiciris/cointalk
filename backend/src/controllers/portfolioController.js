@@ -1,4 +1,5 @@
 const database = require('../utils/database');
+const PriceService = require('../services/priceService');
 
 class PortfolioController {
   // 포트폴리오 조회
@@ -12,13 +13,13 @@ class PortfolioController {
         [userId]
       );
 
-      // 지갑이 없으면 생성
+      // 지갑이 없으면 생성 (1억원 = 100,000,000원)
       if (!wallet || wallet.length === 0) {
         await database.query(
-          'INSERT INTO user_wallets (user_id, balance) VALUES (?, 10000.00)',
+          'INSERT INTO user_wallets (user_id, balance) VALUES (?, 100000000.00)',
           [userId]
         );
-        wallet = [{ balance: 10000.00 }];
+        wallet = [{ balance: 100000000.00 }];
       }
 
       // 보유 코인 조회
@@ -34,32 +35,33 @@ class PortfolioController {
         ORDER BY total_invested DESC
       `, [userId]);
 
-      // 현재 가격 정보 (모의 데이터)
-      const currentPrices = {
-        'BTC': 67234.50,
-        'ETH': 3456.78,
-        'ADA': 0.4567,
-        'SOL': 158.64,
-        'XRP': 1.12
-      };
+      // 실시간 가격 정보 가져오기
+      const priceData = await PriceService.getRealTimePrices();
+      const currentPrices = priceData.prices;
+      const exchangeRate = priceData.exchangeRate;
 
-      // 포트폴리오 계산
+      // 포트폴리오 계산 - 강제 숫자 변환
       let totalValue = 0;
       let totalInvested = 0;
       const enrichedHoldings = holdings.map(holding => {
-        const currentPrice = currentPrices[holding.symbol] || holding.avg_price;
-        const currentValue = holding.total_amount * currentPrice;
-        const profit = currentValue - holding.total_invested;
-        const profitPercent = holding.total_invested > 0 ? (profit / holding.total_invested) * 100 : 0;
+        // 모든 값을 강제로 숫자로 변환
+        const totalAmount = Number(holding.total_amount) || 0;
+        const avgPrice = Number(holding.avg_price) || 0;
+        const investedAmount = Number(holding.total_invested) || 0;
+        
+        const currentPrice = currentPrices[holding.symbol] || avgPrice;
+        const currentValue = totalAmount * currentPrice;
+        const profit = currentValue - investedAmount;
+        const profitPercent = investedAmount > 0 ? (profit / investedAmount) * 100 : 0;
 
         totalValue += currentValue;
-        totalInvested += holding.total_invested;
+        totalInvested += investedAmount;
 
         return {
           symbol: holding.symbol,
           name: holding.coin_name,
-          amount: parseFloat(holding.total_amount),
-          avgPrice: parseFloat(holding.avg_price),
+          amount: totalAmount,
+          avgPrice: avgPrice,
           currentPrice: currentPrice,
           value: currentValue,
           profit: profit,
@@ -76,25 +78,26 @@ class PortfolioController {
       const totalProfit = totalValue - totalInvested;
       const totalProfitPercent = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
 
-      // 24시간 변화 (모의 데이터 - 실제로는 이전 가격과 비교)
-      const dayChange = totalValue * 0.028; // 2.8% 가정
-      const dayChangePercent = 2.8;
+      // 포트폴리오 다양성 계산
+      const portfolioDiversity = holdings.length;
+      const avgPositionSize = portfolioDiversity > 0 ? totalInvested / portfolioDiversity : 0;
 
       res.json({
         success: true,
         data: {
           wallet: {
-            balance: parseFloat(wallet[0].balance)
+            balance: Math.round(Number(wallet[0].balance) || 0)
           },
           portfolio: {
-            totalValue: totalValue,
-            totalInvested: totalInvested,
-            totalProfit: totalProfit,
-            totalProfitPercent: totalProfitPercent,
-            dayChange: dayChange,
-            dayChangePercent: dayChangePercent,
+            totalValue: Math.round(totalValue || 0),
+            totalInvested: Math.round(totalInvested || 0),
+            totalProfit: Math.round(totalProfit || 0),
+            totalProfitPercent: isNaN(totalProfitPercent) ? 0 : Math.round(totalProfitPercent * 100) / 100,
+            portfolioDiversity: portfolioDiversity,
+            avgPositionSize: Math.round(avgPositionSize || 0),
             holdings: enrichedHoldings
-          }
+          },
+          exchangeRate: exchangeRate
         }
       });
     } catch (error) {

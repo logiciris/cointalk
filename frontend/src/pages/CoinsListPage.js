@@ -66,6 +66,17 @@ const CoinsListPage = () => {
       volume24h: 3900000000,
       logo: '✕',
       followers: 334
+    },
+    { 
+      id: 6, 
+      name: 'Dogecoin', 
+      symbol: 'DOGE', 
+      price: 0.385, 
+      change24h: 12.7, 
+      marketCap: 55000000000, 
+      volume24h: 2800000000,
+      logo: '🐕',
+      followers: 678
     }
   ];
 

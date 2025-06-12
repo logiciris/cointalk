@@ -5,56 +5,136 @@ import { Container, Row, Col, Card, Form, Button, Alert, Tab, Nav, Table } from 
 const TradePage = () => {
   const { symbol } = useParams();
   const [coin, setCoin] = useState(null);
+  const [realTimePrice, setRealTimePrice] = useState(null);
+  const [exchangeRate, setExchangeRate] = useState(1320);
   const [tradeType, setTradeType] = useState('buy');
   const [quantity, setQuantity] = useState('');
   const [amount, setAmount] = useState('');
   const [alert, setAlert] = useState(null);
   const [wallet, setWallet] = useState({ balance: 10000, coins: {} });
+  const [portfolioData, setPortfolioData] = useState(null);
   const [transactions, setTransactions] = useState([]);
 
-  // Mock coin data
-  const mockCoins = {
-    BTC: { name: 'Bitcoin', price: 45000, change24h: 2.5, logo: '₿' },
-    ETH: { name: 'Ethereum', price: 3000, change24h: -1.2, logo: 'Ξ' },
-    BNB: { name: 'Binance Coin', price: 400, change24h: 0.8, logo: 'BNB' },
-    ADA: { name: 'Cardano', price: 1.2, change24h: 3.1, logo: 'ADA' },
-    SOL: { name: 'Solana', price: 120, change24h: -2.3, logo: 'SOL' }
+  // 코인 기본 정보 (로고, 이름)
+  const coinInfo = {
+    BTC: { name: 'Bitcoin', logo: '₿' },
+    ETH: { name: 'Ethereum', logo: 'Ξ' },
+    BNB: { name: 'Binance Coin', logo: 'BNB' },
+    ADA: { name: 'Cardano', logo: 'ADA' },
+    SOL: { name: 'Solana', logo: 'SOL' },
+    DOGE: { name: 'Dogecoin', logo: '🐕' }
   };
 
   useEffect(() => {
-    if (mockCoins[symbol]) {
-      setCoin(mockCoins[symbol]);
+    if (coinInfo[symbol]) {
+      setCoin(coinInfo[symbol]);
+      loadRealTimePrice();
     }
     
-    // Load wallet from localStorage
-    const savedWallet = localStorage.getItem('wallet');
-    if (savedWallet) {
-      setWallet(JSON.parse(savedWallet));
-    }
-
-    // Load transactions from localStorage
-    const savedTransactions = localStorage.getItem('transactions');
-    if (savedTransactions) {
-      setTransactions(JSON.parse(savedTransactions));
-    }
+    // 백엔드에서 지갑 정보 로드
+    loadWalletInfo();
+    loadTransactions();
+    
+    // 30초마다 실시간 가격 업데이트
+    const priceInterval = setInterval(() => {
+      loadRealTimePrice();
+    }, 30000);
+    
+    return () => clearInterval(priceInterval);
   }, [symbol]);
 
+  const loadRealTimePrice = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/prices/realtime/${symbol}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setRealTimePrice(result.data.price);
+        setExchangeRate(result.data.exchangeRate);
+      }
+    } catch (error) {
+      console.error('실시간 가격 로드 오류:', error);
+    }
+  };
+
+  const loadWalletInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:5000/api/portfolio', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const portfolio = result.data.portfolio;
+        const balance = result.data.wallet.balance;
+        
+        // 포트폴리오 데이터 저장
+        setPortfolioData(portfolio);
+        
+        // 보유 코인을 객체로 변환
+        const coins = {};
+        portfolio.holdings.forEach(holding => {
+          coins[holding.symbol] = holding.amount;
+        });
+
+        setWallet({ balance, coins });
+      }
+    } catch (error) {
+      console.error('지갑 정보 로드 오류:', error);
+    }
+  };
+
+  const loadTransactions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://localhost:5000/api/portfolio/transactions', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // 백엔드 형식을 프론트엔드 형식으로 변환
+        const formattedTransactions = result.data.transactions.map(tx => ({
+          id: tx.created_at,
+          type: tx.transaction_type,
+          symbol: tx.symbol,
+          quantity: tx.amount,
+          price: tx.price,
+          total: tx.total_value,
+          date: tx.created_at
+        }));
+        setTransactions(formattedTransactions);
+      }
+    } catch (error) {
+      console.error('거래 내역 로드 오류:', error);
+    }
+  };
+
   const calculateTotal = () => {
-    if (!quantity || !coin) return '0.00';
-    return (parseFloat(quantity) * coin.price).toFixed(2);
+    if (!quantity || !realTimePrice) return '0.00';
+    return (parseFloat(quantity) * realTimePrice).toFixed(2);
   };
 
   const getPortfolioValue = () => {
     let total = wallet.balance;
     for (const [coinSymbol, amount] of Object.entries(wallet.coins)) {
-      if (mockCoins[coinSymbol]) {
-        total += amount * mockCoins[coinSymbol].price;
+      if (realTimePrice && coinSymbol === symbol) {
+        total += amount * realTimePrice;
       }
     }
     return total;
   };
 
-  const handleTrade = () => {
+  const handleTrade = async () => {
     const qty = parseFloat(quantity);
     const total = parseFloat(calculateTotal());
 
@@ -63,71 +143,86 @@ const TradePage = () => {
       return;
     }
 
-    if (tradeType === 'buy') {
-      if (total > wallet.balance) {
-        setAlert({ type: 'danger', message: '잔고가 부족합니다.' });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setAlert({ type: 'danger', message: '로그인이 필요합니다.' });
         return;
       }
 
-      const newWallet = {
-        ...wallet,
-        balance: wallet.balance - total,
-        coins: {
-          ...wallet.coins,
-          [symbol]: (wallet.coins[symbol] || 0) + qty
-        }
-      };
+      if (tradeType === 'buy') {
+        // 백엔드 API로 매수 요청
+        const response = await fetch('http://localhost:5000/api/portfolio/buy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            symbol: symbol,
+            coinName: coin.name,
+            amount: qty,
+            price: realTimePrice
+          })
+        });
 
-      setWallet(newWallet);
-      localStorage.setItem('wallet', JSON.stringify(newWallet));
-      
-      setAlert({ type: 'success', message: `${qty} ${symbol} 매수 완료!` });
-    } else {
-      const holdings = wallet.coins[symbol] || 0;
-      if (qty > holdings) {
-        setAlert({ type: 'danger', message: '보유 수량이 부족합니다.' });
-        return;
+        const result = await response.json();
+        
+        if (result.success) {
+          setAlert({ type: 'success', message: `${qty} ${symbol} 매수 완료!` });
+          // 포트폴리오 페이지 새로고침을 위해 이벤트 발생
+          window.dispatchEvent(new Event('portfolio-updated'));
+        } else {
+          setAlert({ type: 'danger', message: result.message || '매수 실패' });
+        }
+      } else {
+        // 백엔드 API로 매도 요청
+        const response = await fetch('http://localhost:5000/api/portfolio/sell', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            symbol: symbol,
+            amount: qty,
+            price: realTimePrice
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          setAlert({ type: 'success', message: `${qty} ${symbol} 매도 완료!` });
+          // 포트폴리오 페이지 새로고침을 위해 이벤트 발생
+          window.dispatchEvent(new Event('portfolio-updated'));
+        } else {
+          setAlert({ type: 'danger', message: result.message || '매도 실패' });
+        }
       }
 
-      const newWallet = {
-        ...wallet,
-        balance: wallet.balance + total,
-        coins: {
-          ...wallet.coins,
-          [symbol]: holdings - qty
-        }
-      };
-
-      setWallet(newWallet);
-      localStorage.setItem('wallet', JSON.stringify(newWallet));
+      // Reset form
+      setQuantity('');
+      setAmount('');
       
-      setAlert({ type: 'success', message: `${qty} ${symbol} 매도 완료!` });
+      // 지갑 정보 새로고침
+      loadWalletInfo();
+      
+    } catch (error) {
+      console.error('거래 오류:', error);
+      setAlert({ type: 'danger', message: '거래 중 오류가 발생했습니다.' });
     }
-
-    // Add transaction record
-    const newTransaction = {
-      id: Date.now(),
-      type: tradeType,
-      symbol,
-      quantity: qty,
-      price: coin.price,
-      total,
-      date: new Date().toISOString()
-    };
-
-    const newTransactions = [newTransaction, ...transactions];
-    setTransactions(newTransactions);
-    localStorage.setItem('transactions', JSON.stringify(newTransactions));
-
-    // Reset form
-    setQuantity('');
-    setAmount('');
   };
 
-  if (!coin) {
+  if (!coin || !realTimePrice) {
     return (
       <Container className="mt-4">
-        <Alert variant="danger">코인을 찾을 수 없습니다.</Alert>
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">로딩 중...</span>
+          </div>
+          <div className="mt-2">실시간 가격을 불러오는 중...</div>
+        </div>
       </Container>
     );
   }
@@ -156,11 +251,10 @@ const TradePage = () => {
                 <div>
                   <h5 className="mb-0">{coin.name}</h5>
                   <div className="d-flex align-items-center">
-                    <span className="h4 mb-0 me-3">${coin.price.toLocaleString()}</span>
-                    <span className={`badge ${coin.change24h >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                      {coin.change24h >= 0 ? '+' : ''}{coin.change24h}%
-                    </span>
+                    <span className="h4 mb-0 me-3">${realTimePrice.toLocaleString()}</span>
+                    <span className="badge bg-success">실시간</span>
                   </div>
+                  <small className="text-muted">₩{(realTimePrice * exchangeRate).toLocaleString()}</small>
                 </div>
               </div>
             </Card.Header>
@@ -216,8 +310,14 @@ const TradePage = () => {
                               placeholder="0.00000000"
                               value={quantity}
                               onChange={(e) => {
-                                setQuantity(e.target.value);
-                                setAmount(calculateTotal());
+                                const newQuantity = e.target.value;
+                                setQuantity(newQuantity);
+                                if (newQuantity && realTimePrice) {
+                                  const total = (parseFloat(newQuantity) * realTimePrice).toFixed(2);
+                                  setAmount(total);
+                                } else {
+                                  setAmount('');
+                                }
                               }}
                             />
                             <Form.Text className="text-muted">
@@ -236,9 +336,14 @@ const TradePage = () => {
                               placeholder="0.00"
                               value={amount}
                               onChange={(e) => {
-                                setAmount(e.target.value);
-                                const qty = parseFloat(e.target.value) / coin.price;
-                                setQuantity(qty.toFixed(8));
+                                const newAmount = e.target.value;
+                                setAmount(newAmount);
+                                if (newAmount && realTimePrice) {
+                                  const qty = (parseFloat(newAmount) / realTimePrice).toFixed(8);
+                                  setQuantity(qty);
+                                } else {
+                                  setQuantity('');
+                                }
                               }}
                             />
                           </Form.Group>
@@ -247,8 +352,8 @@ const TradePage = () => {
 
                       <div className="mb-3 p-3 bg-light rounded">
                         <div className="d-flex justify-content-between mb-2">
-                          <span>가격:</span>
-                          <span>${coin.price.toLocaleString()}</span>
+                          <span>실시간 가격:</span>
+                          <span>${realTimePrice.toLocaleString()}</span>
                         </div>
                         <div className="d-flex justify-content-between mb-2">
                           <span>수량:</span>
@@ -337,15 +442,26 @@ const TradePage = () => {
               <div className="mb-3">
                 <div className="d-flex justify-content-between">
                   <span>총 포트폴리오 가치:</span>
-                  <span className="fw-bold text-primary">${getPortfolioValue().toFixed(2)}</span>
+                  <span className="fw-bold text-primary">
+                    ${portfolioData ? portfolioData.totalValue.toFixed(2) : getPortfolioValue().toFixed(2)}
+                  </span>
                 </div>
               </div>
 
               <div className="d-flex justify-content-between text-success">
                 <span>수익/손실:</span>
                 <span className="fw-bold">
-                  ${(getPortfolioValue() - 10000).toFixed(2)} 
-                  ({(((getPortfolioValue() - 10000) / 10000) * 100).toFixed(2)}%)
+                  {portfolioData ? (
+                    <>
+                      ${portfolioData.totalProfit.toFixed(2)} 
+                      ({portfolioData.totalProfitPercent.toFixed(2)}%)
+                    </>
+                  ) : (
+                    <>
+                      ${(getPortfolioValue() - 10000).toFixed(2)} 
+                      ({(((getPortfolioValue() - 10000) / 10000) * 100).toFixed(2)}%)
+                    </>
+                  )}
                 </span>
               </div>
             </Card.Body>
@@ -362,7 +478,7 @@ const TradePage = () => {
                   onClick={() => {
                     const quickAmount = wallet.balance * 0.25;
                     setAmount(quickAmount.toFixed(2));
-                    setQuantity((quickAmount / coin.price).toFixed(8));
+                    setQuantity((quickAmount / realTimePrice).toFixed(8));
                     setTradeType('buy');
                   }}
                 >
@@ -373,7 +489,7 @@ const TradePage = () => {
                   onClick={() => {
                     const quickAmount = wallet.balance * 0.5;
                     setAmount(quickAmount.toFixed(2));
-                    setQuantity((quickAmount / coin.price).toFixed(8));
+                    setQuantity((quickAmount / realTimePrice).toFixed(8));
                     setTradeType('buy');
                   }}
                 >
@@ -385,7 +501,7 @@ const TradePage = () => {
                     const holdings = wallet.coins[symbol] || 0;
                     const sellQty = holdings * 0.5;
                     setQuantity(sellQty.toFixed(8));
-                    setAmount((sellQty * coin.price).toFixed(2));
+                    setAmount((sellQty * realTimePrice).toFixed(2));
                     setTradeType('sell');
                   }}
                 >
@@ -396,7 +512,7 @@ const TradePage = () => {
                   onClick={() => {
                     const holdings = wallet.coins[symbol] || 0;
                     setQuantity(holdings.toFixed(8));
-                    setAmount((holdings * coin.price).toFixed(2));
+                    setAmount((holdings * realTimePrice).toFixed(2));
                     setTradeType('sell');
                   }}
                 >

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Badge, Alert, Form } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const PortfolioPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useSelector(state => state.auth);
   
   const [portfolio, setPortfolio] = useState(null);
+  const [exchangeRate, setExchangeRate] = useState(1320);
   const [loading, setLoading] = useState(true);
   const [addCoinForm, setAddCoinForm] = useState({
     symbol: '',
@@ -16,19 +18,50 @@ const PortfolioPage = () => {
   });
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // 페이지 방문 시마다 포트폴리오 새로고침
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadPortfolio();
+    }
+  }, [location.pathname, isAuthenticated]);
+
   useEffect(() => {
     if (!isAuthenticated) {
       return;
     }
-    
-    loadPortfolio();
     
     // 30초마다 포트폴리오 업데이트
     const interval = setInterval(() => {
       updatePrices();
     }, 30000);
 
-    return () => clearInterval(interval);
+    // 페이지 포커스 시 포트폴리오 새로고침
+    const handleFocus = () => {
+      loadPortfolio();
+    };
+
+    // 브라우저 탭이 활성화될 때 새로고침
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadPortfolio();
+      }
+    };
+
+    // 거래 완료 시 포트폴리오 새로고침
+    const handlePortfolioUpdate = () => {
+      loadPortfolio();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('portfolio-updated', handlePortfolioUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('portfolio-updated', handlePortfolioUpdate);
+    };
   }, [isAuthenticated]);
 
   const loadPortfolio = async () => {
@@ -45,6 +78,7 @@ const PortfolioPage = () => {
       
       if (result.success) {
         setPortfolio(result.data.portfolio);
+        setExchangeRate(result.data.exchangeRate || 1320);
       } else {
         console.error('포트폴리오 로드 실패:', result.message);
         // 실패 시 빈 포트폴리오로 설정
@@ -122,20 +156,41 @@ const PortfolioPage = () => {
       'XRP': 'Ripple',
       'DOT': 'Polkadot',
       'MATIC': 'Polygon',
-      'LINK': 'Chainlink'
+      'LINK': 'Chainlink',
+      'DOGE': 'Dogecoin'
     };
     return coinNames[symbol.toUpperCase()] || symbol.toUpperCase();
   };
 
   const formatNumber = (num, decimals = 2) => {
+    if (num === undefined || num === null || isNaN(num)) return '0';
     return num?.toLocaleString(undefined, { 
       minimumFractionDigits: decimals, 
       maximumFractionDigits: decimals 
     });
   };
 
-  const formatCurrency = (num) => {
-    return `$${formatNumber(num)}`;
+  const formatCurrency = (num, showKrw = true) => {
+    if (num === undefined || num === null || isNaN(num)) return '$0';
+    const usdAmount = Math.round(num * 100) / 100;
+    const krwAmount = Math.round(num * exchangeRate);
+    
+    if (showKrw) {
+      return (
+        <div>
+          <div>${usdAmount.toLocaleString()}</div>
+          <small className="text-muted">₩{krwAmount.toLocaleString()}</small>
+        </div>
+      );
+    } else {
+      return `$${usdAmount.toLocaleString()}`;
+    }
+  };
+
+  const formatPrice = (num) => {
+    if (num === undefined || num === null || isNaN(num)) return '$0';
+    if (num >= 1) return `$${num.toFixed(2)}`;
+    return `$${num.toFixed(4)}`;
   };
 
   if (!isAuthenticated) {
@@ -213,13 +268,9 @@ const PortfolioPage = () => {
         <Col md={3}>
           <Card className="text-center">
             <Card.Body>
-              <h6 className="text-muted mb-1">24시간 변화</h6>
-              <h4 className={`mb-0 ${portfolio.dayChange >= 0 ? 'text-success' : 'text-danger'}`}>
-                {formatCurrency(portfolio.dayChange)}
-              </h4>
-              <small className={portfolio.dayChangePercent >= 0 ? 'text-success' : 'text-danger'}>
-                ({portfolio.dayChangePercent >= 0 ? '+' : ''}{formatNumber(portfolio.dayChangePercent)}%)
-              </small>
+              <h6 className="text-muted mb-1">포트폴리오 다양성</h6>
+              <h4 className="mb-0 text-info">{portfolio.portfolioDiversity}개</h4>
+              <small className="text-muted">코인 종류</small>
             </Card.Body>
           </Card>
         </Col>
@@ -228,7 +279,7 @@ const PortfolioPage = () => {
             <Card.Body>
               <h6 className="text-muted mb-1">투자 원금</h6>
               <h4 className="mb-0">{formatCurrency(portfolio.totalInvested)}</h4>
-              <small className="text-muted">수익률: {formatNumber(portfolio.totalProfitPercent)}%</small>
+              <small className="text-muted">평균 포지션: ${formatNumber(portfolio.avgPositionSize)}</small>
             </Card.Body>
           </Card>
         </Col>
@@ -324,10 +375,14 @@ const PortfolioPage = () => {
                     {formatNumber(holding.amount, 4)}
                   </td>
                   <td className="text-end">
-                    {formatCurrency(holding.avgPrice)}
+                    {formatPrice(holding.avgPrice)}
+                    <br />
+                    <small className="text-muted">₩{Math.round(holding.avgPrice * exchangeRate).toLocaleString()}</small>
                   </td>
                   <td className="text-end">
-                    {formatCurrency(holding.currentPrice)}
+                    {formatPrice(holding.currentPrice)}
+                    <br />
+                    <small className="text-muted">₩{Math.round(holding.currentPrice * exchangeRate).toLocaleString()}</small>
                   </td>
                   <td className="text-end fw-bold">
                     {formatCurrency(holding.value)}

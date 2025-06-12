@@ -4,7 +4,7 @@
 CREATE TABLE user_wallets (
   id INT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
-  balance DECIMAL(15, 2) DEFAULT 10000.00, -- 기본 10,000 USD 지급
+  balance DECIMAL(15, 2) DEFAULT 100000000.00, -- 기본 1억원 지급
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -43,9 +43,9 @@ CREATE TABLE portfolio_transactions (
   INDEX idx_symbol_transactions (symbol, created_at DESC)
 );
 
--- 초기 데이터: 모든 기존 사용자에게 지갑 생성
+-- 초기 데이터: 모든 기존 사용자에게 지갑 생성 (1억원)
 INSERT IGNORE INTO user_wallets (user_id, balance)
-SELECT id, 10000.00 FROM users;
+SELECT id, 100000000.00 FROM users;
 
 -- 샘플 포트폴리오 데이터 (test 사용자용)
 INSERT IGNORE INTO portfolio_holdings (user_id, symbol, coin_name, total_amount, avg_price, total_invested)
