@@ -193,10 +193,16 @@ class UserController {
       const userId = result.insertId;
       
       // 새 사용자에게 기본 지갑 생성 (1억원 = 100,000,000원)
-      await database.insert('user_wallets', {
-        user_id: userId,
-        balance: 100000000.00  // 1억원 지급
-      });
+      try {
+        await database.insert('user_wallets', {
+          user_id: userId,
+          balance: 100000000.00  // 1억원 지급
+        });
+        console.log(`💰 User ${username} wallet created with 100M KRW`);
+      } catch (walletError) {
+        console.error('Wallet creation failed:', walletError);
+        // 지갑 생성 실패해도 회원가입은 성공으로 처리
+      }
       
       // 🚨 2차 인증 코드 생성 (6자리 랜덤 숫자)
       const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -208,12 +214,16 @@ class UserController {
       }
       
       // 2차 인증 데이터 삽입
-      await database.query(
-        'INSERT INTO two_factor_auth (user_id, secret_key, backup_codes, enabled, enabled_at) VALUES (?, ?, ?, TRUE, NOW())',
-        [userId, twoFactorCode, JSON.stringify(backupCodes)]
-      );
-      
-      console.log(`🔒 New user ${username} registered with 2FA code: ${twoFactorCode}`);
+      try {
+        await database.query(
+          'INSERT INTO two_factor_auth (user_id, secret_key, backup_codes, enabled, enabled_at) VALUES (?, ?, ?, TRUE, NOW())',
+          [userId, twoFactorCode, JSON.stringify(backupCodes)]
+        );
+        console.log(`🔒 User ${username} 2FA enabled with code: ${twoFactorCode}`);
+      } catch (twoFactorError) {
+        console.error('2FA setup failed:', twoFactorError);
+        // 2FA 설정 실패해도 회원가입은 성공으로 처리
+      }
       
       res.status(201).json({
         success: true,
