@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, InputGroup, Dropdown, Badge } from 'react-bootstrap';
@@ -7,10 +7,37 @@ import LanguageSelector from '../common/LanguageSelector';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [userMenus, setUserMenus] = useState([]);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
   const { isAuthenticated, user } = useSelector(state => state.auth);
+
+  // 서버에서 메뉴 권한 정보 가져오기
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchMenuPermissions();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchMenuPermissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/auth/menu-permissions', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('서버 메뉴 권한:', data);
+        setUserMenus(data.menus || []);
+        setHasAdminAccess(data.hasAdminAccess || false);
+      }
+    } catch (error) {
+      console.error('메뉴 권한 확인 오류:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -193,28 +220,15 @@ const Header = () => {
               
               <Dropdown.Divider />
               
-              <Dropdown.Item as={Link} to={`/profile/${user?.username}`}>
-                <i className="bi bi-person me-2"></i>내 프로필
-              </Dropdown.Item>
+              {/* 서버에서 받은 메뉴들 */}
+              {userMenus.map((menu, index) => (
+                <Dropdown.Item key={index} as={Link} to={menu.path}>
+                  <i className={`${menu.icon} me-2`}></i>{menu.name}
+                </Dropdown.Item>
+              ))}
               
-              <Dropdown.Item as={Link} to="/settings">
-                <i className="bi bi-gear me-2"></i>설정
-              </Dropdown.Item>
-              
-              <Dropdown.Item as={Link} to="/saved">
-                <i className="bi bi-bookmark me-2"></i>저장됨
-              </Dropdown.Item>
-              
-              <Dropdown.Divider />
-              
-              {/* 관리자 메뉴 */}
-              {user?.role === 'admin' && (
-                <>
-                  <Dropdown.Item as={Link} to="/admin">
-                    <i className="bi bi-shield-check me-2"></i>관리자 패널
-                  </Dropdown.Item>
-                  <Dropdown.Divider />
-                </>
+              {hasAdminAccess && (
+                <Dropdown.Divider />
               )}
               
               <Dropdown.Item onClick={handleLogout} className="text-danger">

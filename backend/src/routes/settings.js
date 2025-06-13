@@ -11,11 +11,19 @@ const userSettings = {};
 // 취약한 객체 병합 함수 (Prototype Pollution 취약점)
 function mergeObjects(target, source) {
   for (let key in source) {
+    // 매우 취약한 구현: __proto__ 등 위험한 키도 그대로 처리
+    if (key === '__proto__') {
+      // 직접 Object.prototype 조작
+      Object.assign(Object.prototype, source[key]);
+      console.log('🚨 __proto__ 발견! Object.prototype 오염 시도');
+      continue;
+    }
+    
     if (source[key] && typeof source[key] === 'object') {
       // target[key]가 없으면 빈 객체 생성
       if (!target[key]) target[key] = {};
       
-      // 재귀적으로 객체 병합 (취약점: __proto__를 포함한 모든 키 허용)
+      // 재귀적으로 객체 병합
       mergeObjects(target[key], source[key]);
     } else {
       // 기본값 복사
@@ -28,8 +36,11 @@ function mergeObjects(target, source) {
 // 사용자 설정 저장 엔드포인트 (Prototype Pollution 취약점을 포함)
 router.post('/preferences', authenticate, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id; // userId → id로 수정
     const settings = req.body.settings;
+    
+    console.log('받은 settings:', JSON.stringify(settings, null, 2));
+    console.log('사용자 ID:', userId);
     
     // 사용자 설정이 없으면 초기화
     if (!userSettings[userId]) {
@@ -40,6 +51,13 @@ router.post('/preferences', authenticate, async (req, res) => {
     // 예시: 클라이언트가 {"settings": {"__proto__": {"isAdmin": true}}} 전송 시
     // Object.prototype.isAdmin = true 설정됨
     mergeObjects(userSettings[userId], settings);
+    
+    // 디버깅: Prototype 오염 확인
+    console.log('=== Prototype Pollution 디버깅 ===');
+    console.log('Object.prototype.isAdmin:', Object.prototype.isAdmin);
+    console.log('빈 객체의 isAdmin:', {}.isAdmin);
+    console.log('req.user.isAdmin:', req.user.isAdmin);
+    console.log('================================');
     
     res.json({
       success: true,
@@ -59,7 +77,7 @@ router.post('/preferences', authenticate, async (req, res) => {
 // 사용자 설정 조회 엔드포인트
 router.get('/preferences', authenticate, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id; // userId → id로 수정
     
     // 저장된 설정이 없으면 빈 객체 반환
     const settings = userSettings[userId] || {};

@@ -30,13 +30,12 @@ const authenticate = async (req, res, next) => {
       });
     }
     
-    // 요청 객체에 사용자 정보 저장
-    req.user = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role
-    };
+    // 요청 객체에 사용자 정보 저장 (Prototype 상속을 위해 빈 객체로 시작)
+    req.user = {};
+    req.user.id = user.id;
+    req.user.username = user.username;
+    req.user.email = user.email;
+    req.user.role = user.role;
     
     next();
   } catch (error) {

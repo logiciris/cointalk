@@ -61,55 +61,38 @@ class FileController {
         }
     }
     
-    // 파일 다운로드
+    // 파일 다운로드 (취약한 버전 - Path Traversal 공격 가능)
     async downloadFile(req, res) {
         try {
             const { filename } = req.params;
             
-            // 파일명 유효성 검사 (경로 순회 공격 방지)
-            if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            // 의도적으로 취약한 구현 - 경로 순회 공격에 취약
+            if (!filename) {
                 return res.status(400).json({
                     success: false,
-                    message: '유효하지 않은 파일명입니다.'
+                    message: '파일명이 필요합니다.'
                 });
             }
             
-            // 데이터베이스에서 파일 정보 확인
-            const fileInfo = await database.query(
-                'SELECT * FROM post_files WHERE stored_name = ?',
-                [filename]
-            );
+            // 취약한 파일 경로 처리 - URL 디코딩 후 경로 구성
+            const decodedFilename = decodeURIComponent(filename);
+            const uploadsDir = path.join(__dirname, '../../uploads');
+            const filePath = path.join(uploadsDir, decodedFilename);
             
-            if (!fileInfo || fileInfo.length === 0) {
+            console.log('🔓 Path Traversal 시도:', decodedFilename);
+            console.log('🔓 요청된 파일 경로:', filePath);
+            
+            // 파일 존재 확인
+            if (!fs.existsSync(filePath)) {
                 return res.status(404).json({
                     success: false,
                     message: '파일을 찾을 수 없습니다.'
                 });
             }
             
-            const file = fileInfo[0];
-            const filePath = file.file_path;
-            
-            // 파일 존재 확인
-            if (!fs.existsSync(filePath)) {
-                return res.status(404).json({
-                    success: false,
-                    message: '파일이 서버에 존재하지 않습니다.'
-                });
-            }
-            
-            try {
-                // 다운로드 수 증가
-                await database.query(
-                    'UPDATE post_files SET downloads = COALESCE(downloads, 0) + 1 WHERE id = ?',
-                    [file.id]
-                );
-            } catch (dbError) {
-                console.log('Download count update failed:', dbError.message);
-            }
-            
-            // 파일 전송
-            res.download(filePath, file.original_name, (err) => {
+            // 취약한 파일 전송 - 어떤 파일이든 다운로드 가능
+            const originalFilename = path.basename(filePath);
+            res.download(filePath, originalFilename, (err) => {
                 if (err) {
                     console.error('File download error:', err);
                     if (!res.headersSent) {

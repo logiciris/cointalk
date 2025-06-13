@@ -29,6 +29,7 @@ import SearchPage from './pages/SearchPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import SecuritySettingsPage from './pages/SecuritySettingsPage';
+import GeneralSettingsPage from './pages/GeneralSettingsPage';
 import AdminPage from './pages/AdminPage';
 
 import TwoFactorSettingsPage from './pages/TwoFactorSettingsPage';
@@ -72,6 +73,7 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/settings/security" element={<SecuritySettingsPage />} />
+            <Route path="/settings/general" element={<GeneralSettingsPage />} />
             <Route path="/settings/2fa" element={<TwoFactorSettingsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
