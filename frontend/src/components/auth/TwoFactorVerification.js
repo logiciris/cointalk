@@ -22,6 +22,10 @@ const TwoFactorVerification = ({ sessionId, onVerificationSuccess, onCancel, use
 
     try {
       const response = await authService.verifyTwoFactor(sessionId, code, trustDevice);
+      
+      // 🚨 서버 응답을 전역 변수에 저장 (우회 함수에서 사용)
+      window.lastTwoFactorResponse = response;
+      console.log('📦 서버 응답 저장:', response);
 
       // 🚨 취약점: 클라이언트에서 검증 결과를 신뢰
       // 개발자 도구에서 response.verification.isValid를 true로 변경하면 우회 가능
@@ -37,6 +41,9 @@ const TwoFactorVerification = ({ sessionId, onVerificationSuccess, onCancel, use
           sessionId: sessionId,
           response: response
         });
+        
+        // 🚨 힌트: 우회 방법 알려주기
+        console.log('💡 힌트: window.bypassTwoFactor() 또는 response.verification.isValid를 true로 변경');
       }
     } catch (error) {
       console.error('2FA verification error:', error);
@@ -53,12 +60,26 @@ const TwoFactorVerification = ({ sessionId, onVerificationSuccess, onCancel, use
 
   // 🚨 취약점: 클라이언트 측 우회 함수 (개발자 도구에서 호출 가능)
   window.bypassTwoFactor = () => {
-    console.log('🚨 우회 시도: 2차 인증 건너뛰기');
-    onVerificationSuccess({
+    console.log('🚨 2FA 우회 시도');
+    
+    // 마지막 서버 응답에서 토큰 가져오기
+    const lastResponse = window.lastTwoFactorResponse;
+    if (!lastResponse || !lastResponse.token) {
+      console.log('❌ 서버 토큰이 없어서 우회 실패');
+      return;
+    }
+    
+    console.log('✅ 기존 토큰 사용:', lastResponse.token.substring(0, 20) + '...');
+    
+    // 🚨 조작된 성공 응답으로 로그인 처리
+    const hackedResponse = {
       success: true,
-      verification: { isValid: true, bypass: true },
-      message: '우회된 인증'
-    });
+      verification: { isValid: true, bypass: true }, // false를 true로 조작!
+      token: lastResponse.token, // 1차 로그인에서 받은 실제 토큰
+      message: '우회 인증 성공'
+    };
+    
+    onVerificationSuccess(hackedResponse);
   };
 
   return (

@@ -20,6 +20,7 @@ const RegisterPage = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
   const [twoFactorSetupData, setTwoFactorSetupData] = useState(null);
+  const [registerError, setRegisterError] = useState(''); // 로컬 에러 상태 추가
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -56,6 +57,11 @@ const RegisterPage = () => {
 
   const onChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    
+    // 에러 메시지 초기화
+    if (registerError) {
+      setRegisterError('');
+    }
     
     // 실시간 유효성 검사
     validateField(e.target.name, e.target.value);
@@ -174,12 +180,12 @@ const RegisterPage = () => {
           navigate('/');
         }
       } else {
-        // 회원가입 실패
-        alert(result.message || '회원가입에 실패했습니다.');
+        // 회원가입 실패 - 로컬 상태에 에러 저장
+        setRegisterError(result.message || '회원가입에 실패했습니다.');
       }
     } catch (error) {
       console.error('회원가입 오류:', error);
-      alert('서버 오류가 발생했습니다.');
+      setRegisterError('서버 오류가 발생했습니다.');
     }
   };
 
@@ -198,6 +204,12 @@ const RegisterPage = () => {
           <Card>
             <Card.Body>
               <h2 className="text-center mb-4">회원가입</h2>
+              
+              {registerError && (
+                <Alert variant="danger" dismissible onClose={() => setRegisterError('')}>
+                  {registerError}
+                </Alert>
+              )}
               
               {error && (
                 <Alert variant="danger" dismissible onClose={() => dispatch(clearErrors())}>

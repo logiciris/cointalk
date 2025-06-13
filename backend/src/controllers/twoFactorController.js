@@ -221,6 +221,7 @@ class TwoFactorController {
       
       const sessionData = session[0];
       const userId = sessionData.user_id;
+      const existingToken = sessionData.token; // 🚨 1차 로그인에서 발급된 토큰
       
       // 2차 인증 정보 조회
       const twoFactorData = await database.query(
@@ -242,12 +243,11 @@ class TwoFactorController {
       try {
         backupCodes = JSON.parse(twoFactorData[0].backup_codes || '[]');
       } catch (e) {
-        console.log('Backup codes parsing error:', e.message, 'Raw data:', twoFactorData[0].backup_codes);
+        console.log('Backup codes parsing error:', e.message);
         backupCodes = [];
       }
       
-      // TOTP 코드 검증 - 6자리 숫자로 변환
-      // 🚨 교육용 - secret_key를 6자리 숫자로 변환
+      // 실제 TOTP 코드 검증 
       const expectedCode = secretKey.slice(-6); // 마지막 6자리 사용
       
       if (code === expectedCode) {
@@ -262,23 +262,22 @@ class TwoFactorController {
         isValidCode = true;
       }
       
-      // 🚨 의도적인 취약점: 항상 성공 응답 반환
-      // 실제 검증 결과와 관계없이 클라이언트에서 판단하도록 함
-      const attemptRecord = await database.query(
+      // 시도 기록
+      await database.query(
         'INSERT INTO two_factor_attempts (session_id, user_id, code_entered, success, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
         [sessionId, userId, code, isValidCode, req.ip, req.get('User-Agent')]
       );
       
-      // 성공 시 JWT 토큰 생성 및 쿠키 설정 (응답 전에 실행)
-      let token = null;
+      // 🚨 취약점: 성공/실패 관계없이 항상 기존 토큰 반환
+      // 클라이언트에서 isValid를 true로 바꾸면 이 토큰으로 로그인 가능
       if (isValidCode) {
-        // 2차 인증 성공으로 세션 업데이트
+        // 성공 시에만 세션 업데이트와 쿠키 설정
         await database.query(
           'UPDATE two_factor_sessions SET two_factor_verified = TRUE WHERE id = ?',
           [sessionId]
         );
         
-        // 신뢰할 수 있는 디바이스로 등록 (선택 시)
+        // 신뢰할 수 있는 디바이스 등록
         if (trustDevice) {
           const deviceId = crypto.randomBytes(32).toString('hex');
           await database.query(
@@ -287,37 +286,22 @@ class TwoFactorController {
           );
         }
         
-        // 실제 JWT 토큰 생성
-        const user = await database.query('SELECT * FROM users WHERE id = ?', [userId]);
-        token = jwt.sign(
-          { 
-            userId: user[0].id,
-            username: user[0].username,
-            role: user[0].role 
-          },
-          config.jwt.secret,
-          { expiresIn: config.jwt.expiresIn }
-        );
-        
-        // 쿠키에 토큰 설정 (응답 전에 실행)
-        res.cookie('token', token, {
-          httpOnly: false, // XSS 취약점
+        // 성공 시에만 쿠키 설정
+        res.cookie('token', existingToken, {
+          httpOnly: false,
           secure: false,
           sameSite: 'none'
         });
       }
       
-      // 취약점: 실제 검증 결과를 숨기고 클라이언트가 조작 가능한 응답 구조
+      // 🚨 취약점: 항상 토큰 반환 (실패 시에도!)
       res.json({
         success: true,
-        // 🚨 취약점: 클라이언트에서 이 값을 조작할 수 있음
         verification: {
-          isValid: isValidCode,
-          sessionId: sessionId,
-          userId: userId,
-          timestamp: Date.now()
+          isValid: isValidCode, // 실제 검증 결과
+          userId: userId
         },
-        token: token, // 토큰도 응답에 포함
+        token: existingToken, // 🚨 항상 1차 로그인 토큰 반환
         message: isValidCode ? '인증이 완료되었습니다.' : '잘못된 인증 코드입니다.'
       });
       
@@ -325,8 +309,7 @@ class TwoFactorController {
       console.error('2FA verification error:', error);
       res.status(500).json({ 
         success: false,
-        message: '2차 인증 검증 중 오류가 발생했습니다.',
-        error: error.message // 에러 정보 노출 (취약점)
+        message: '2차 인증 검증 중 오류가 발생했습니다.'
       });
     }
   }

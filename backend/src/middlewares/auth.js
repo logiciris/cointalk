@@ -120,14 +120,45 @@ const unsafeAuthenticate = async (req, res, next) => {
   }
 };
 
-// 관리자 권한 확인
+// 관리자 권한 확인 (🚨 Prototype Pollution 취약점 포함)
 const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(403).json({ 
+  try {
+    // 빈 객체로 시작해서 Prototype 오염 영향 받도록
+    const userInfo = {};
+    userInfo.id = req.user.id;
+    userInfo.username = req.user.username;
+    userInfo.role = req.user.role;
+    
+    console.log('🔍 관리자 권한 체크:');
+    console.log('- req.user.role:', req.user.role);
+    console.log('- userInfo.isAdmin (from prototype):', userInfo.isAdmin);
+    console.log('- req.user.isAdmin:', req.user.isAdmin);
+    
+    // 🚨 취약점: Prototype Pollution으로 isAdmin 속성이 오염되면 관리자 권한 획득
+    const hasAdminRole = req.user.role === 'admin';
+    const hasAdminFromPrototype = userInfo.isAdmin || req.user.isAdmin;
+    
+    if (hasAdminRole || hasAdminFromPrototype) {
+      console.log('✅ 관리자 권한 승인:', { hasAdminRole, hasAdminFromPrototype });
+      
+      // req.user에도 isAdmin 정보 추가
+      if (hasAdminFromPrototype) {
+        req.user.isAdmin = true;
+      }
+      
+      next();
+    } else {
+      console.log('❌ 관리자 권한 거부');
+      res.status(403).json({ 
+        success: false,
+        message: '관리자 권한이 필요합니다.' 
+      });
+    }
+  } catch (error) {
+    console.error('관리자 권한 확인 오류:', error);
+    res.status(500).json({ 
       success: false,
-      message: '관리자 권한이 필요합니다.' 
+      message: '권한 확인 중 오류가 발생했습니다.' 
     });
   }
 };

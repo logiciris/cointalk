@@ -30,7 +30,7 @@ router.post(
       .normalizeEmail()
       .withMessage('유효한 이메일 주소를 입력하세요.'),
     body('phone')
-      .optional()
+      .optional({ checkFalsy: true })
       .matches(/^01[0-9]{1}-?[0-9]{3,4}-?[0-9]{4}$/)
       .withMessage('올바른 핸드폰 번호 형식을 입력하세요.'),
     body('password')
@@ -86,19 +86,31 @@ router.post(
       
       // 2차 인증 확인
       if (user.two_factor_enabled) {
+        // 🚨 취약점: 1차 로그인 성공 시 이미 JWT 토큰 생성
+        const token = jwt.sign(
+          { 
+            userId: user.id,
+            username: user.username,
+            role: user.role 
+          },
+          JWT_SECRET,
+          { expiresIn: config.jwt.expiresIn }
+        );
+        
         // 2차 인증 세션 생성
         const sessionId = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10분 후 만료
         
         await database.query(
-          'INSERT INTO two_factor_sessions (id, user_id, email, expires_at) VALUES (?, ?, ?, ?)',
-          [sessionId, user.id, user.email, expiresAt]
+          'INSERT INTO two_factor_sessions (id, user_id, email, expires_at, token) VALUES (?, ?, ?, ?, ?)',
+          [sessionId, user.id, user.email, expiresAt, token]
         );
         
         return res.json({
           success: true,
           requiresTwoFactor: true,
           sessionId: sessionId,
+          token: token, // 🚨 1차 로그인에서 이미 토큰 발급
           message: '1차 인증 완료. 2차 인증을 진행하세요.',
           user: {
             id: user.id,

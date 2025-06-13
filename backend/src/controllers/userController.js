@@ -2,6 +2,7 @@ const database = require('../utils/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
+const { validationResult } = require('express-validator');
 // Node.js 18에서 내장된 fetch 사용 (node-fetch 대신)
 
 // 사용자 컨트롤러
@@ -151,7 +152,6 @@ class UserController {
   async register(req, res) {
     try {
       // 유효성 검사 오류 확인
-      const { validationResult } = require('express-validator');
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ 

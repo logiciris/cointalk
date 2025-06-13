@@ -18,12 +18,21 @@ const Header = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchMenuPermissions();
+    } else {
+      // 로그아웃 상태일 때 메뉴 초기화
+      setUserMenus([]);
+      setHasAdminAccess(false);
     }
   }, [isAuthenticated, user]);
 
   const fetchMenuPermissions = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('토큰이 없음');
+        return;
+      }
+      
       const response = await fetch('http://localhost:5000/api/auth/menu-permissions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -33,6 +42,8 @@ const Header = () => {
         console.log('서버 메뉴 권한:', data);
         setUserMenus(data.menus || []);
         setHasAdminAccess(data.hasAdminAccess || false);
+      } else {
+        console.error('메뉴 권한 요청 실패:', response.status);
       }
     } catch (error) {
       console.error('메뉴 권한 확인 오류:', error);
@@ -227,9 +238,7 @@ const Header = () => {
                 </Dropdown.Item>
               ))}
               
-              {hasAdminAccess && (
-                <Dropdown.Divider />
-              )}
+              <Dropdown.Divider />
               
               <Dropdown.Item onClick={handleLogout} className="text-danger">
                 <i className="bi bi-box-arrow-right me-2"></i>로그아웃

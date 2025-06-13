@@ -37,34 +37,57 @@ const AdminPage = () => {
 
   // 관리자 권한 확인
   useEffect(() => {
-    // Redux에서 사용자 정보가 없으면 localStorage에서 가져오기
-    let currentUser = user;
-    if (!currentUser) {
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          currentUser = JSON.parse(storedUser);
-        }
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-    }
-
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/');
-      return;
-    }
-    
-    loadDashboard();
+    checkAdminAccess();
   }, [user, navigate]);
+
+  const checkAdminAccess = async () => {
+    try {
+      // 서버에서 관리자 권한 확인
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('❌ 토큰 없음, 홈으로 리다이렉트');
+        navigate('/');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/auth/menu-permissions', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 서버 관리자 권한 확인:', data);
+        
+        if (data.hasAdminAccess) {
+          console.log('✅ 서버에서 관리자 권한 확인됨');
+          loadDashboard();
+        } else {
+          console.log('❌ 서버에서 관리자 권한 거부, 홈으로 리다이렉트');
+          navigate('/');
+        }
+      } else {
+        console.log('❌ 서버 권한 확인 실패, 홈으로 리다이렉트');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('권한 확인 오류:', error);
+      navigate('/');
+    }
+  };
 
   // 대시보드 데이터 로드
   const loadDashboard = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await adminService.getDashboard();
       setDashboardData(response.data);
     } catch (error) {
+      console.error('Dashboard load error:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        navigate('/');
+        return;
+      }
       setError('대시보드 데이터를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -75,9 +98,15 @@ const AdminPage = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await adminService.getUsers();
       setUsers(response.data.users);
     } catch (error) {
+      console.error('Users load error:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        navigate('/');
+        return;
+      }
       setError('사용자 목록을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -606,16 +635,11 @@ const AdminPage = () => {
     }
   }
 
-  if (!currentUser || currentUser.role !== 'admin') {
-    return (
-      <Container className="mt-5">
-        <Alert variant="danger">
-          관리자 권한이 필요합니다.
-        </Alert>
-      </Container>
-    );
-  }
-
+  // 🚨 Prototype Pollution 취약점: isAdmin 속성도 체크
+  const hasAdminRole = currentUser?.role === 'admin';
+  const hasAdminFromPrototype = currentUser?.isAdmin;
+  
+  // 컴포넌트 렌더 시점에서는 로딩 상태만 체크
   return (
     <Container fluid className="admin-page">
       <Row>
