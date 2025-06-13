@@ -22,9 +22,12 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./uploads:/app/uploads
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - NODE_ENV=development
       - DB_HOST=mysql
@@ -49,13 +52,16 @@ services:
       - ./database/00-init-charset.sql:/docker-entrypoint-initdb.d/00-init-charset.sql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./database/2fa_schema.sql:/docker-entrypoint-initdb.d/02-2fa_schema.sql
-      - ./database/portfolio_schema.sql:/docker-entrypoint-initdb.d/03-portfolio_schema.sql
-      - ./database/sample_data_1.sql:/docker-entrypoint-initdb.d/04-sample_data_1.sql
-      - ./database/sample_data_2.sql:/docker-entrypoint-initdb.d/05-sample_data_2.sql
-      - ./database/sample_data_3_a.sql:/docker-entrypoint-initdb.d/06-sample_data_3_a.sql
-      - ./database/sample_data_3_b.sql:/docker-entrypoint-initdb.d/07-sample_data_3_b.sql
-      - ./database/sample_data_3_c.sql:/docker-entrypoint-initdb.d/08-sample_data_3_c.sql
-      - ./database/sample_data_3_d.sql:/docker-entrypoint-initdb.d/09-sample_data_3_d.sql
+      - ./database/two_factor_schema.sql:/docker-entrypoint-initdb.d/03-two_factor_schema.sql
+      - ./database/file_upload_schema.sql:/docker-entrypoint-initdb.d/04-file_upload_schema.sql
+      - ./database/portfolio_schema.sql:/docker-entrypoint-initdb.d/05-portfolio_schema.sql
+      - ./database/sample_data_1.sql:/docker-entrypoint-initdb.d/06-sample_data_1.sql
+      - ./database/sample_data_2.sql:/docker-entrypoint-initdb.d/07-sample_data_2.sql
+      - ./database/2fa_sample_data.sql:/docker-entrypoint-initdb.d/08-2fa_sample_data.sql
+      - ./database/sample_data_3_a.sql:/docker-entrypoint-initdb.d/09-sample_data_3_a.sql
+      - ./database/sample_data_3_b.sql:/docker-entrypoint-initdb.d/10-sample_data_3_b.sql
+      - ./database/sample_data_3_c.sql:/docker-entrypoint-initdb.d/11-sample_data_3_c.sql
+      - ./database/sample_data_3_d.sql:/docker-entrypoint-initdb.d/12-sample_data_3_d.sql
       - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
@@ -95,10 +101,13 @@ services:
       - DB_USER=cointalk_user
       - DB_PASSWORD=password123
       - DB_NAME=cointalk
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=your_jwt_secret
     networks:
       - cointalk-network
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
   # 모니터링 서비스 (내부 전용)
   monitoring:
@@ -117,8 +126,10 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
     networks:
       - cointalk-network
 
@@ -129,3 +140,4 @@ networks:
 volumes:
   mysql-data:
   redis-data:
+  uploads-data:
