@@ -37,6 +37,24 @@ docker-compose up --build -d
 ```
 
 ## 🔧 문제 해결
+
+### 📊 데이터베이스 초기화 오류 해결
+만약 회원가입 시 "Table doesn't exist" 오류가 발생하면:
+
+```bash
+# Linux/Mac - 완전 초기화
+./reset.sh
+
+# Windows - 완전 초기화  
+reset.bat
+
+# 또는 수동으로
+docker-compose down -v
+docker volume prune -f
+docker-compose up --build -d
+```
+
+### 🐛 일반적인 문제들
 설치 가이드는 [INSTALLATION.md](INSTALLATION.md)를 참고하세요.
 
 ---
