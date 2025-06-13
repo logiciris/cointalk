@@ -30,7 +30,7 @@ const authenticate = async (req, res, next) => {
       });
     }
     
-    // 요청 객체에 사용자 정보 저장 (Prototype 상속을 위해 빈 객체로 시작)
+    // 요청 객체에 사용자 정보 저장 (상속을 위해 빈 객체로 시작)
     req.user = {};
     req.user.id = user.id;
     req.user.username = user.username;
@@ -120,10 +120,10 @@ const unsafeAuthenticate = async (req, res, next) => {
   }
 };
 
-// 관리자 권한 확인 (🚨 Prototype Pollution 취약점 포함)
+// 관리자 권한 확인
 const isAdmin = (req, res, next) => {
   try {
-    // 빈 객체로 시작해서 Prototype 오염 영향 받도록
+    // 빈 객체로 시작해서 오염 영향 받도록
     const userInfo = {};
     userInfo.id = req.user.id;
     userInfo.username = req.user.username;
@@ -131,10 +131,10 @@ const isAdmin = (req, res, next) => {
     
     console.log('🔍 관리자 권한 체크:');
     console.log('- req.user.role:', req.user.role);
-    console.log('- userInfo.isAdmin (from prototype):', userInfo.isAdmin);
+    console.log('- userInfo.isAdmin:', userInfo.isAdmin);
     console.log('- req.user.isAdmin:', req.user.isAdmin);
     
-    // 🚨 취약점: Prototype Pollution으로 isAdmin 속성이 오염되면 관리자 권한 획득
+    // 추가된 isAdmin 속성이 오염되면 관리자 권한 획득
     const hasAdminRole = req.user.role === 'admin';
     const hasAdminFromPrototype = userInfo.isAdmin || req.user.isAdmin;
     

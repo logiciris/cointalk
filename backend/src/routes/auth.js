@@ -156,7 +156,7 @@ router.post(
   }
 );
 
-// 사용자 정보 조회 (Prototype Pollution 취약점 포함)
+// 사용자 정보 조회
 router.get('/me', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -168,7 +168,7 @@ router.get('/me', authenticate, async (req, res) => {
       });
     }
     
-    // 사용자 정보를 빈 객체로 시작해서 Prototype 오염 영향 받도록 수정
+    // 사용자 정보 구성
     const userInfo = {};
     userInfo.id = user.id;
     userInfo.username = user.username;
@@ -177,10 +177,10 @@ router.get('/me', authenticate, async (req, res) => {
     userInfo.created_at = user.created_at;
     userInfo.updated_at = user.updated_at;
     
-    // Prototype 오염으로 추가된 속성들도 명시적으로 포함
-    console.log('userInfo.isAdmin (from prototype):', userInfo.isAdmin);
+    // 추가 속성 확인
+    console.log('userInfo.isAdmin:', userInfo.isAdmin);
     if (userInfo.isAdmin) {
-      userInfo.isAdmin = true; // 명시적으로 설정
+      userInfo.isAdmin = true;
     }
     
     res.json({
@@ -348,17 +348,17 @@ router.get('/menu-permissions', authenticate, async (req, res) => {
       });
     }
     
-    // 빈 객체로 시작해서 Prototype 오염 영향 받도록
+    // 빈 객체로 시작해서 영향 받도록
     const userInfo = {};
     userInfo.id = user.id;
     userInfo.username = user.username;
     userInfo.role = user.role;
     
-    // Prototype 오염 확인
+    // 오염 확인
     console.log('메뉴 권한 확인 - userInfo.isAdmin:', userInfo.isAdmin);
     console.log('메뉴 권한 확인 - req.user.isAdmin:', req.user.isAdmin);
     
-    // 관리자 권한 체크 (role 또는 prototype pollution으로 추가된 isAdmin)
+    // 관리자 권한 체크 (role 또는 추가된 isAdmin)
     const hasAdminAccess = userInfo.role === 'admin' || userInfo.isAdmin || req.user.isAdmin;
     
     // 메뉴 구성

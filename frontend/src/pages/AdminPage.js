@@ -635,7 +635,7 @@ const AdminPage = () => {
     }
   }
 
-  // 🚨 Prototype Pollution 취약점: isAdmin 속성도 체크
+  // isAdmin 속성도 체크
   const hasAdminRole = currentUser?.role === 'admin';
   const hasAdminFromPrototype = currentUser?.isAdmin;
   
