@@ -1,5 +1,8 @@
 -- 파일 업로드 기능을 위한 테이블 추가
 
+-- 외래 키 제약 조건 일시적 비활성화
+SET FOREIGN_KEY_CHECKS=0;
+
 -- 게시물 첨부파일 테이블
 CREATE TABLE IF NOT EXISTS post_files (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -22,3 +25,6 @@ ALTER TABLE post_files ADD INDEX idx_post_id (post_id);
 INSERT INTO post_files (post_id, original_name, stored_name, file_path, file_size, mime_type) VALUES
 (1, 'trading-strategy.js', 'trading-strategy-1647123456.js', '/uploads/trading-strategy-1647123456.js', 2048, 'application/javascript'),
 (2, 'market-analysis.pdf', 'market-analysis-1647123457.pdf', '/uploads/market-analysis-1647123457.pdf', 524288, 'application/pdf');
+
+-- 외래 키 제약 조건 다시 활성화
+SET FOREIGN_KEY_CHECKS=1;
