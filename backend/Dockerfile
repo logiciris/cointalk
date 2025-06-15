@@ -12,9 +12,25 @@ RUN npm install
 # 글로벌 패키지 설치
 RUN npm install -g nodemon
 
-# wait-for 스크립트 복사
-COPY wait-for.sh /wait-for.sh
-RUN chmod +x /wait-for.sh
+# wait-for 스크립트를 직접 생성
+RUN echo '#!/bin/sh' > /wait-for.sh && \
+    echo '# wait-for.sh' >> /wait-for.sh && \
+    echo '' >> /wait-for.sh && \
+    echo 'set -e' >> /wait-for.sh && \
+    echo '' >> /wait-for.sh && \
+    echo 'host="$1"' >> /wait-for.sh && \
+    echo 'port="$2"' >> /wait-for.sh && \
+    echo 'shift 2' >> /wait-for.sh && \
+    echo 'cmd="$@"' >> /wait-for.sh && \
+    echo '' >> /wait-for.sh && \
+    echo 'until nc -z "$host" "$port"; do' >> /wait-for.sh && \
+    echo '  >&2 echo "Waiting for $host:$port to be available..."' >> /wait-for.sh && \
+    echo '  sleep 1' >> /wait-for.sh && \
+    echo 'done' >> /wait-for.sh && \
+    echo '' >> /wait-for.sh && \
+    echo '>&2 echo "$host:$port is available - executing command"' >> /wait-for.sh && \
+    echo 'exec $cmd' >> /wait-for.sh && \
+    chmod +x /wait-for.sh
 
 # 소스 코드 복사
 COPY . .

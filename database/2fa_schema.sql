@@ -28,6 +28,7 @@ CREATE TABLE two_factor_sessions (
     ip_address VARCHAR(45),
     user_agent TEXT,
     expires_at DATETIME NOT NULL,
+    token VARCHAR(500),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
