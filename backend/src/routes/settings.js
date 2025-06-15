@@ -8,16 +8,6 @@ const config = require('../config/config');
 // 사용자 설정을 저장하는 전역 객체
 const userSettings = {};
 
-const express = require('express');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
-const { authenticate } = require('../middlewares/auth');
-const User = require('../models/User');
-const config = require('../config/config');
-
-// 사용자 설정을 저장하는 전역 객체
-const userSettings = {};
-
 // 객체 병합 함수
 function mergeObjects(target, source) {
   for (let key in source) {
